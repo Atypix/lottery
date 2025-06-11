@@ -373,6 +373,188 @@ def main():
     
     print("\nLa prédiction a été sauvegardée dans le fichier 'prediction.txt'.")
 
+# --- Start of refactored functions ---
+
+def load_trained_models(model_base_name="euromillions_model_tf"):
+    main_model_path = os.path.join("models", f"{model_base_name}_main", "final_model.h5")
+    stars_model_path = os.path.join("models", f"{model_base_name}_stars", "final_model.h5")
+    main_model = None
+    stars_model = None
+    try:
+        if os.path.exists(main_model_path):
+            main_model = tf.keras.models.load_model(main_model_path)
+            print(f"Loaded pre-trained main numbers model from {main_model_path}")
+        else:
+            print(f"Warning: Main numbers model not found at {main_model_path}")
+        if os.path.exists(stars_model_path):
+            stars_model = tf.keras.models.load_model(stars_model_path)
+            print(f"Loaded pre-trained stars model from {stars_model_path}")
+        else:
+            print(f"Warning: Stars model not found at {stars_model_path}")
+    except Exception as e:
+        print(f"Error loading models: {e}")
+    return main_model, stars_model
+
+def predict_with_tensorflow_model():
+    main_model, stars_model = load_trained_models()
+
+    if main_model is None or stars_model is None:
+        return {
+            'numbers': [], 'stars': [], 'confidence': None,
+            'model_name': 'euromillions_model_tf', 'status': 'failure',
+            'message': 'Models not found. Please train them first or ensure dummy models exist.'
+        }
+
+    try:
+        df = pd.read_csv("euromillions_dataset.csv")
+    except FileNotFoundError:
+        return {
+            'numbers': [], 'stars': [], 'confidence': None,
+            'model_name': 'euromillions_model_tf', 'status': 'failure',
+            'message': 'euromillions_dataset.csv not found.'
+        }
+
+    df['Date'] = pd.to_datetime(df['Date'])
+    df = df.sort_values('Date')
+    main_numbers_data = df[['N1', 'N2', 'N3', 'N4', 'N5']].values
+    stars_data = df[['E1', 'E2']].values
+
+    main_scaler = MinMaxScaler(feature_range=(0, 1))
+    stars_scaler = MinMaxScaler(feature_range=(0, 1))
+
+    # Fit scalers with all data, then transform
+    main_normalized_full = main_scaler.fit_transform(main_numbers_data)
+    stars_normalized_full = stars_scaler.fit_transform(stars_data)
+
+    if len(main_normalized_full) < SEQUENCE_LENGTH or len(stars_normalized_full) < SEQUENCE_LENGTH:
+        return {
+            'numbers': [], 'stars': [], 'confidence': None,
+            'model_name': 'euromillions_model_tf', 'status': 'failure',
+            'message': f'Not enough data to form a sequence (need {SEQUENCE_LENGTH}, got {len(main_normalized_full)}).'
+        }
+
+    X_main_last_sequence_data = main_normalized_full[-SEQUENCE_LENGTH:]
+    X_stars_last_sequence_data = stars_normalized_full[-SEQUENCE_LENGTH:]
+
+    X_main_last_sequence = np.reshape(X_main_last_sequence_data, (1, SEQUENCE_LENGTH, X_main_last_sequence_data.shape[1]))
+    X_stars_last_sequence = np.reshape(X_stars_last_sequence_data, (1, SEQUENCE_LENGTH, X_stars_last_sequence_data.shape[1]))
+
+    main_pred_norm = main_model.predict(X_main_last_sequence)
+    stars_pred_norm = stars_model.predict(X_stars_last_sequence)
+
+    main_pred = main_scaler.inverse_transform(main_pred_norm)
+    stars_pred = stars_scaler.inverse_transform(stars_pred_norm)
+
+    final_main_numbers = np.round(main_pred[0]).astype(int)
+    final_stars = np.round(stars_pred[0]).astype(int)
+
+    final_main_numbers = np.clip(final_main_numbers, 1, 50)
+    final_stars = np.clip(final_stars, 1, 12)
+
+    unique_main = sorted(list(set(final_main_numbers)))
+    while len(unique_main) < 5:
+        new_num = np.random.randint(1, 51)
+        if new_num not in unique_main: unique_main.append(new_num)
+        unique_main = sorted(list(set(unique_main))) # ensure sorted after append
+    final_main_numbers = unique_main[:5]
+
+    unique_stars = sorted(list(set(final_stars)))
+    while len(unique_stars) < 2:
+        new_star = np.random.randint(1, 13)
+        if new_star not in unique_stars: unique_stars.append(new_star)
+        unique_stars = sorted(list(set(unique_stars))) # ensure sorted after append
+    final_stars = unique_stars[:2]
+
+    return {
+        'numbers': final_main_numbers, # Already a list
+        'stars': final_stars,         # Already a list
+        'confidence': None, # Confidence not typically provided by basic LSTMs
+        'model_name': 'euromillions_model_tf',
+        'status': 'success',
+        'message': 'Prediction generated successfully.'
+    }
+
+# Renaming original main function
+def train_all_models_and_predict():
+    # Create the necessary directories (logs, models, plots)
+    # This was originally in main()
+    os.makedirs("logs", exist_ok=True)
+    os.makedirs("models", exist_ok=True) # Main model dir will be models/MODEL_NAME_main
+    os.makedirs("plots", exist_ok=True)
+
+    # Charger et préparer les données
+    (
+        X_main_train, y_main_train, X_main_test, y_main_test,
+        X_stars_train, y_stars_train, X_stars_test, y_stars_test,
+        main_scaler, stars_scaler
+    ) = load_and_prepare_data("euromillions_dataset.csv")
+
+    # Créer les modèles
+    main_model = create_main_numbers_model((X_main_train.shape[1], X_main_train.shape[2]))
+    stars_model = create_stars_model((X_stars_train.shape[1], X_stars_train.shape[2]))
+
+    # Afficher les résumés des modèles
+    print("Modèle pour les numéros principaux:")
+    main_model.summary()
+
+    print("\nModèle pour les étoiles:")
+    stars_model.summary()
+
+    # Entraîner les modèles
+    print("\nEntraînement du modèle pour les numéros principaux...")
+    main_history = train_model(
+        main_model, X_main_train, y_main_train, X_main_test, y_main_test,
+        f"{MODEL_NAME}_main" # This will create models/euromillions_predictor_DATE_TIME_main/
+    )
+
+    print("\nEntraînement du modèle pour les étoiles...")
+    stars_history = train_model(
+        stars_model, X_stars_train, y_stars_train, X_stars_test, y_stars_test,
+        f"{MODEL_NAME}_stars" # This will create models/euromillions_predictor_DATE_TIME_stars/
+    )
+
+    # Visualiser l'historique d'entraînement
+    plot_training_history(main_history, f"{MODEL_NAME}_main")
+    plot_training_history(stars_history, f"{MODEL_NAME}_stars")
+
+    # Prédire les prochains numéros
+    # Utiliser les dernières séquences disponibles
+    X_main_last = X_main_test[-1]
+    X_stars_last = X_stars_test[-1]
+
+    # Note: The predict_next_numbers function uses the *trained* models from this session.
+    # The new predict_with_tensorflow_model uses models loaded from "models/euromillions_model_tf_main/final_model.h5"
+    main_numbers, star_numbers = predict_next_numbers(
+        main_model, stars_model, X_main_last, X_stars_last, main_scaler, stars_scaler
+    )
+
+    print("\nPrédiction pour le prochain tirage (from training run):")
+    print(f"Numéros principaux: {main_numbers}")
+    print(f"Étoiles: {star_numbers}")
+
+    # Sauvegarder la prédiction dans un fichier
+    with open("prediction.txt", "w") as f:
+        f.write("Prédiction pour le prochain tirage de l'Euromillions (from training run):\n")
+        f.write(f"Numéros principaux: {', '.join(map(str, main_numbers))}\n")
+        f.write(f"Étoiles: {', '.join(map(str, star_numbers))}\n")
+
+    print("\nLa prédiction (from training run) a été sauvegardée dans le fichier 'prediction.txt'.")
+
+
 if __name__ == "__main__":
-    main()
+    # To run prediction (assuming models are trained or dummy models exist):
+    prediction_result = predict_with_tensorflow_model()
+    print("\n--- TensorFlow Model Prediction (using loaded models) ---")
+    if prediction_result['status'] == 'success':
+        print(f"Numbers: {prediction_result['numbers']}")
+        print(f"Stars: {prediction_result['stars']}")
+    else:
+        print(f"Prediction failed: {prediction_result['message']}")
+    print(f"Model: {prediction_result['model_name']}")
+    print(f"Status: {prediction_result['status']}")
+
+    # To run training (optional, can be commented out):
+    # print("\n--- Training TensorFlow Models (optional) ---")
+    # train_all_models_and_predict()
+    # print("Training complete (if run). Prediction from training is in prediction.txt")
 

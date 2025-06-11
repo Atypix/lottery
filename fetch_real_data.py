@@ -30,16 +30,16 @@ def fetch_euromillions_data():
             # Nettoyer et formater les données
             df = clean_and_format_data(df)
             
-            return df
+            return df, "API"
         else:
             print(f"Erreur API: {response.status_code}")
             # Utiliser le jeu de données existant comme fallback
-            return use_existing_dataset()
+            return use_existing_dataset() # This will now return (df, source)
             
     except Exception as e:
         print(f"Erreur lors de la récupération des données: {e}")
         # Utiliser le jeu de données existant comme fallback
-        return use_existing_dataset()
+        return use_existing_dataset() # This will now return (df, source)
 
 def use_existing_dataset():
     """
@@ -52,10 +52,10 @@ def use_existing_dataset():
         print("Utilisation du jeu de données existant...")
         df = pd.read_csv("euromillions_dataset.csv")
         print(f"Jeu de données existant chargé: {len(df)} tirages")
-        return df
+        return df, "CSV"
     except FileNotFoundError:
         print("Aucun jeu de données disponible. Création d'un jeu de données synthétique...")
-        return create_synthetic_dataset()
+        return create_synthetic_dataset() # This will now return (df, source)
 
 def create_synthetic_dataset():
     """
@@ -109,7 +109,7 @@ def create_synthetic_dataset():
     df = pd.DataFrame(data)
     print(f"Jeu de données synthétique créé: {len(df)} tirages")
     
-    return df
+    return df, "synthetic"
 
 def clean_and_format_data(df):
     """
@@ -234,6 +234,12 @@ def clean_and_format_data(df):
     missing_columns = set(required_columns) - set(df_final.columns)
     if missing_columns:
         print(f"Impossible d'extraire toutes les colonnes nécessaires. Utilisation du jeu de données existant.")
+        # Ensure this path also returns a tuple, though it might be complex to ensure source propogates here
+        # For now, assuming clean_and_format_data is called by fetch_euromillions_data which handles source
+        # This path might indicate a failure within clean_and_format_data itself.
+        # A robust solution would have clean_and_format_data also signal failure type.
+        # For this step, we'll assume if it gets here, the original source was likely API or CSV but cleaning failed.
+        # However, use_existing_dataset() is called, which returns (df, source)
         return use_existing_dataset()
     
     # Trier par date
@@ -389,49 +395,88 @@ def save_enhanced_dataset(df, filename="euromillions_enhanced_dataset.csv"):
     print(f"Dimensions: {df.shape}")
     print(f"Colonnes: {df.columns.tolist()}")
 
-def main():
+def update_euromillions_data():
     """
-    Fonction principale pour récupérer et améliorer les données.
+    Fonction principale pour récupérer, améliorer les données et retourner un statut.
     """
     print("=== Récupération et amélioration des données Euromillions ===")
+    status_message = "Failed to update data." # Default status
     
     # Récupérer les données réelles
-    df = fetch_euromillions_data()
+    df, source = fetch_euromillions_data() # Now returns (df, source_type)
     
+    if df is None or df.empty:
+        if source == "API_Error":
+            status_message = "Failed to fetch data from API and no fallback available."
+        elif source == "CSV_Error":
+             status_message = "Failed to load data from CSV and no synthetic fallback."
+        else:
+            status_message = "Data source returned empty or None, and no synthetic data generated."
+        print(status_message)
+        return status_message
+
     # Afficher un aperçu des données
     print("\nAperçu des données:")
     print(df.head())
-    print(f"\nPériode couverte: {df['Date'].min()} à {df['Date'].max()}")
     
+    # Ensure 'Date' column is in datetime format for min/max operations
+    if 'Date' in df.columns and not pd.api.types.is_datetime64_any_dtype(df['Date']):
+        try:
+            df['Date'] = pd.to_datetime(df['Date'])
+        except Exception as e:
+            print(f"Error converting Date column to datetime: {e}")
+            # Fallback or error handling if 'Date' conversion fails
+            # For now, we might not be able to provide date range in status.
+            date_min_str, date_max_str = "N/A", "N/A"
+
+    if 'Date' in df.columns and pd.api.types.is_datetime64_any_dtype(df['Date']) and not df.empty:
+        date_min_str = df['Date'].min().strftime('%Y-%m-%d')
+        date_max_str = df['Date'].max().strftime('%Y-%m-%d')
+        print(f"\nPériode couverte: {date_min_str} à {date_max_str}")
+    else:
+        date_min_str, date_max_str = "N/A", "N/A"
+        print("\nPériode couverte: N/A (Date column missing or empty)")
+
     # Ajouter des caractéristiques avancées
     print("\nAjout de caractéristiques avancées...")
     df_enhanced = add_advanced_features(df)
     
-    # Sauvegarder le jeu de données amélioré
-    save_enhanced_dataset(df_enhanced)
-    
+    # Sauvegarder le jeu de données amélioré à l'emplacement standardisé
+    save_enhanced_dataset(df_enhanced, "euromillions_enhanced_dataset.csv")
+
+    # Construire le message de statut
+    if source == "API":
+        status_message = f"Data updated successfully from API. Total draws: {len(df_enhanced)}. Period: {date_min_str} to {date_max_str}."
+    elif source == "CSV":
+        status_message = f"Data updated using existing dataset 'euromillions_dataset.csv'. Total draws: {len(df_enhanced)}. Period: {date_min_str} to {date_max_str}."
+    elif source == "synthetic":
+        status_message = f"Data updated using synthetic dataset. Total draws: {len(df_enhanced)}. Period: {date_min_str} to {date_max_str}."
+    else:
+        status_message = f"Data processed from unknown source. Total draws: {len(df_enhanced)}. Period: {date_min_str} to {date_max_str}."
+
     # Afficher les statistiques finales
     print("\n=== Statistiques du jeu de données amélioré ===")
     print(f"Nombre total de tirages: {len(df_enhanced)}")
     print(f"Nombre de caractéristiques: {len(df_enhanced.columns)}")
-    print(f"Période: {df_enhanced['Date'].min()} à {df_enhanced['Date'].max()}")
+    print(f"Période: {date_min_str} à {date_max_str}")
     
-    # Afficher quelques statistiques intéressantes
     print(f"\nSomme moyenne des numéros principaux: {df_enhanced['Main_Sum'].mean():.2f}")
     print(f"Somme médiane des numéros principaux: {df_enhanced['Main_Sum'].median():.2f}")
     
-    # Trouver les numéros les plus fréquents
     main_numbers = df_enhanced[['N1', 'N2', 'N3', 'N4', 'N5']].values.flatten()
     main_counts = pd.Series(main_numbers).value_counts()
-    most_common_main = main_counts.index[0]
+    most_common_main = main_counts.index[0] if not main_counts.empty else "N/A"
     
     stars = df_enhanced[['E1', 'E2']].values.flatten()
     star_counts = pd.Series(stars).value_counts()
-    most_common_star = star_counts.index[0]
+    most_common_star = star_counts.index[0] if not star_counts.empty else "N/A"
     
     print(f"Numéro principal le plus fréquent: {most_common_main}")
     print(f"Étoile la plus fréquente: {most_common_star}")
 
+    return status_message
+
 if __name__ == "__main__":
-    main()
+    status = update_euromillions_data()
+    print(f"\nScript execution status: {status}")
 

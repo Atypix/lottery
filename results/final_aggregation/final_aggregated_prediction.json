@@ -1,0 +1,142 @@
+{
+  "generation_date": "2025-06-11T13:14:30.903361",
+  "reference_draw": {
+    "numbers": [
+      20,
+      21,
+      29,
+      30,
+      35
+    ],
+    "stars": [
+      2,
+      12
+    ],
+    "date": "2025-06-06"
+  },
+  "final_prediction": {
+    "numbers": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "stars": [
+      1,
+      2
+    ],
+    "number_scores": {
+      "1": 0.284,
+      "2": 0.284,
+      "3": 0.284,
+      "4": 0.284,
+      "5": 0.284,
+      "6": 0.0,
+      "7": 0.0,
+      "8": 0.0,
+      "9": 0.0,
+      "10": 0.0
+    },
+    "star_scores": {
+      "1": 0.284,
+      "2": 0.284,
+      "3": 0.0,
+      "4": 0.0,
+      "5": 0.0
+    },
+    "methodology": "Ensemble agr\u00e9g\u00e9 bas\u00e9 sur consensus, historique et patterns"
+  },
+  "consensus_analysis": {
+    "total_predictions": 1,
+    "top_numbers": [
+      [
+        1,
+        0.71
+      ],
+      [
+        2,
+        0.71
+      ],
+      [
+        3,
+        0.71
+      ],
+      [
+        4,
+        0.71
+      ],
+      [
+        5,
+        0.71
+      ]
+    ],
+    "top_stars": [
+      [
+        1,
+        0.71
+      ],
+      [
+        2,
+        0.71
+      ]
+    ],
+    "number_votes": {
+      "1": 0.71,
+      "2": 0.71,
+      "3": 0.71,
+      "4": 0.71,
+      "5": 0.71
+    },
+    "star_votes": {
+      "1": 0.71,
+      "2": 0.71
+    }
+  },
+  "best_practices_insights": {
+    "high_performance_technologies": [],
+    "successful_patterns": [],
+    "optimal_approaches": []
+  },
+  "historical_patterns": {
+    "historical_number_frequency": {},
+    "historical_star_frequency": {},
+    "recent_number_frequency": {},
+    "recent_star_frequency": {},
+    "number_statistics": {
+      "mean": NaN,
+      "std": NaN,
+      "median": NaN
+    },
+    "star_statistics": {
+      "mean": NaN,
+      "std": NaN,
+      "median": NaN
+    }
+  },
+  "confidence_metrics": {
+    "consensus_score": 1.0,
+    "star_consensus_score": 1.0,
+    "historical_score": 0,
+    "diversity_score": 0.0,
+    "validation_score": 0.14285714285714285,
+    "global_confidence": 0.5285714285714286,
+    "confidence_percentage": 52.85714285714286,
+    "validation_matches": {
+      "number_matches": 0,
+      "star_matches": 1,
+      "total_matches": 1
+    }
+  },
+  "methodology": {
+    "approach": "Agr\u00e9gation intelligente de tous les syst\u00e8mes d\u00e9velopp\u00e9s",
+    "systems_analyzed": 1,
+    "technologies_used": 0,
+    "weighting_strategy": {
+      "consensus_votes": "40%",
+      "historical_frequency": "30%",
+      "recent_patterns": "20%",
+      "success_patterns": "10%"
+    }
+  }
+}
