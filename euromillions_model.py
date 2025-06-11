@@ -10,16 +10,17 @@ from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import os
 import datetime
+from common.date_utils import get_next_euromillions_draw_date # Already added, good.
 
 # Configuration des paramètres
 SEQUENCE_LENGTH = 10  # Nombre de tirages précédents à considérer
 BATCH_SIZE = 32
 EPOCHS = 10  # Réduit de 100 à 10 pour accélérer l'entraînement
 LEARNING_RATE = 0.001
-MODEL_NAME = f"euromillions_predictor_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}"
+# MODEL_NAME global variable is removed, will be handled in train_all_models_and_predict
 
 # Fonction pour charger et préparer les données
-def load_and_prepare_data(file_path):
+def load_and_prepare_data(file_path): # Signature remains same, use_enhanced_specific_cols not needed
     """
     Charge et prépare les données pour l'entraînement du modèle.
     
@@ -213,6 +214,8 @@ def train_model(model, X_train, y_train, X_test, y_test, model_name):
     )
     
     # Sauvegarder le modèle final
+    # model_name here is base name like "tf_main_std" or "tf_stars_enhanced"
+    # Checkpoint dir is "models/tf_main_std", so final model is "models/tf_main_std/final_model.h5"
     model.save(os.path.join(checkpoint_dir, "final_model.h5"))
     
     return history
@@ -376,43 +379,52 @@ def main():
 from common.date_utils import get_next_euromillions_draw_date # Added for tf_lstm
 # --- Start of refactored functions ---
 
-def load_trained_models(model_base_name="euromillions_model_tf"):
-    main_model_path = os.path.join("models", f"{model_base_name}_main", "final_model.h5")
-    stars_model_path = os.path.join("models", f"{model_base_name}_stars", "final_model.h5")
+# Made load_trained_models a top-level function and added use_enhanced_data flag
+def load_trained_models(use_enhanced_data=False):
+    model_dir_suffix = "_enhanced" if use_enhanced_data else "_std"
+    main_model_base_name = f"tf_main{model_dir_suffix}"
+    stars_model_base_name = f"tf_stars{model_dir_suffix}"
+
+    main_model_path = os.path.join("models", main_model_base_name, "final_model.h5")
+    stars_model_path = os.path.join("models", stars_model_base_name, "final_model.h5")
+
     main_model = None
     stars_model = None
     try:
         if os.path.exists(main_model_path):
             main_model = tf.keras.models.load_model(main_model_path)
-            print(f"Loaded pre-trained main numbers model from {main_model_path}")
+            print(f"Loaded main numbers model from {main_model_path}")
         else:
             print(f"Warning: Main numbers model not found at {main_model_path}")
         if os.path.exists(stars_model_path):
             stars_model = tf.keras.models.load_model(stars_model_path)
-            print(f"Loaded pre-trained stars model from {stars_model_path}")
+            print(f"Loaded stars model from {stars_model_path}")
         else:
             print(f"Warning: Stars model not found at {stars_model_path}")
     except Exception as e:
         print(f"Error loading models: {e}")
     return main_model, stars_model
 
-def predict_with_tensorflow_model():
-    main_model, stars_model = load_trained_models()
+def predict_with_tensorflow_model(use_enhanced_data=False): # Added use_enhanced_data
+    main_model, stars_model = load_trained_models(use_enhanced_data=use_enhanced_data) # Pass flag
+
+    current_model_name = f"tf_lstm{'_enhanced' if use_enhanced_data else '_std'}"
 
     if main_model is None or stars_model is None:
         return {
             'numbers': [], 'stars': [], 'confidence': None,
-            'model_name': 'tf_lstm', 'status': 'failure', # Align model_name
-            'message': 'Models not found. Please train them first or ensure dummy models exist.'
+            'model_name': current_model_name, 'status': 'failure',
+            'message': 'Models not found. Please train them or ensure dummy models exist.'
         }
 
+    dataset_path = "euromillions_enhanced_dataset.csv" if use_enhanced_data else "euromillions_dataset.csv"
     try:
-        df = pd.read_csv("euromillions_dataset.csv")
+        df = pd.read_csv(dataset_path)
     except FileNotFoundError:
         return {
             'numbers': [], 'stars': [], 'confidence': None,
-            'model_name': 'tf_lstm', 'status': 'failure', # Align model_name
-            'message': 'euromillions_dataset.csv not found.'
+            'model_name': current_model_name, 'status': 'failure',
+            'message': f'{dataset_path} not found.'
         }
 
     df['Date'] = pd.to_datetime(df['Date'])
@@ -430,8 +442,8 @@ def predict_with_tensorflow_model():
     if len(main_normalized_full) < SEQUENCE_LENGTH or len(stars_normalized_full) < SEQUENCE_LENGTH:
         return {
             'numbers': [], 'stars': [], 'confidence': None,
-            'model_name': 'tf_lstm', 'status': 'failure', # Align model_name
-            'message': f'Not enough data to form a sequence (need {SEQUENCE_LENGTH}, got {len(main_normalized_full)}).'
+            'model_name': current_model_name, 'status': 'failure',
+            'message': f'Not enough data to form a sequence (need {SEQUENCE_LENGTH}, got {len(main_normalized_full)} from {dataset_path}).'
         }
 
     X_main_last_sequence_data = main_normalized_full[-SEQUENCE_LENGTH:]
@@ -467,61 +479,62 @@ def predict_with_tensorflow_model():
     final_stars = unique_stars[:2]
 
 
-    next_draw_date_obj = get_next_euromillions_draw_date("euromillions_dataset.csv")
-    target_date_str = next_draw_date_obj.strftime('%Y-%m-%d') # Or '%d/%m/%Y' for consistency with others
+    next_draw_date_obj = get_next_euromillions_draw_date(dataset_path) # Use chosen dataset_path
+    target_date_str = next_draw_date_obj.strftime('%Y-%m-%d')
 
     return {
-        'numbers': final_main_numbers, # Already a list
-        'stars': final_stars,         # Already a list
-        'confidence': None, # Confidence not typically provided by basic LSTMs
-        'model_name': 'tf_lstm', # Align with CLI key
+        'numbers': final_main_numbers,
+        'stars': final_stars,
+        'confidence': None,
+        'model_name': current_model_name,
         'status': 'success',
         'message': 'Prediction generated successfully.',
         'target_draw_date': target_date_str
     }
 
-# Renaming original main function
-def train_all_models_and_predict():
-    # Create the necessary directories (logs, models, plots)
-    # This was originally in main()
+# Renaming original main function and adding use_enhanced_data flag
+def train_all_models_and_predict(use_enhanced_data=False):
     os.makedirs("logs", exist_ok=True)
-    os.makedirs("models", exist_ok=True) # Main model dir will be models/MODEL_NAME_main
+    # "models" directory itself is fine, subdirs are named specifically
+    os.makedirs("models", exist_ok=True)
     os.makedirs("plots", exist_ok=True)
 
-    # Charger et préparer les données
+    dataset_path = "euromillions_enhanced_dataset.csv" if use_enhanced_data else "euromillions_dataset.csv"
+    print(f"--- Training models using: {dataset_path} ---")
+
     (
         X_main_train, y_main_train, X_main_test, y_main_test,
         X_stars_train, y_stars_train, X_stars_test, y_stars_test,
         main_scaler, stars_scaler
-    ) = load_and_prepare_data("euromillions_dataset.csv")
+    ) = load_and_prepare_data(dataset_path) # Pass dataset_path
 
-    # Créer les modèles
     main_model = create_main_numbers_model((X_main_train.shape[1], X_main_train.shape[2]))
     stars_model = create_stars_model((X_stars_train.shape[1], X_stars_train.shape[2]))
 
-    # Afficher les résumés des modèles
     print("Modèle pour les numéros principaux:")
     main_model.summary()
-
     print("\nModèle pour les étoiles:")
     stars_model.summary()
 
-    # Entraîner les modèles
-    print("\nEntraînement du modèle pour les numéros principaux...")
+    model_dir_suffix = "_enhanced" if use_enhanced_data else "_std"
+    # Define base names for model directories and logs, removing timestamp for consistent loading
+    main_model_base_name = f"tf_main{model_dir_suffix}"
+    stars_model_base_name = f"tf_stars{model_dir_suffix}"
+
+    print(f"\nEntraînement du modèle pour les numéros principaux ({main_model_base_name})...")
     main_history = train_model(
         main_model, X_main_train, y_main_train, X_main_test, y_main_test,
-        f"{MODEL_NAME}_main" # This will create models/euromillions_predictor_DATE_TIME_main/
+        main_model_base_name
     )
 
-    print("\nEntraînement du modèle pour les étoiles...")
+    print(f"\nEntraînement du modèle pour les étoiles ({stars_model_base_name})...")
     stars_history = train_model(
         stars_model, X_stars_train, y_stars_train, X_stars_test, y_stars_test,
-        f"{MODEL_NAME}_stars" # This will create models/euromillions_predictor_DATE_TIME_stars/
+        stars_model_base_name
     )
 
-    # Visualiser l'historique d'entraînement
-    plot_training_history(main_history, f"{MODEL_NAME}_main")
-    plot_training_history(stars_history, f"{MODEL_NAME}_stars")
+    plot_training_history(main_history, main_model_base_name)
+    plot_training_history(stars_history, stars_model_base_name)
 
     # Prédire les prochains numéros
     # Utiliser les dernières séquences disponibles
@@ -549,18 +562,30 @@ def train_all_models_and_predict():
 
 if __name__ == "__main__":
     # To run prediction (assuming models are trained or dummy models exist):
-    prediction_result = predict_with_tensorflow_model()
-    print("\n--- TensorFlow Model Prediction (using loaded models) ---")
-    if prediction_result['status'] == 'success':
-        print(f"Numbers: {prediction_result['numbers']}")
-        print(f"Stars: {prediction_result['stars']}")
+    print("\n--- Attempting Prediction with Standard Models ---")
+    prediction_result_std = predict_with_tensorflow_model(use_enhanced_data=False)
+    if prediction_result_std['status'] == 'success':
+        print(f"Numbers (std): {prediction_result_std['numbers']}")
+        print(f"Stars (std): {prediction_result_std['stars']}")
+        print(f"Target Date (std): {prediction_result_std['target_draw_date']}")
     else:
-        print(f"Prediction failed: {prediction_result['message']}")
-    print(f"Model: {prediction_result['model_name']}")
-    print(f"Status: {prediction_result['status']}")
+        print(f"Prediction failed (std): {prediction_result_std['message']}")
+    print(f"Model: {prediction_result_std['model_name']}, Status: {prediction_result_std['status']}")
 
-    # To run training (optional, can be commented out):
-    # print("\n--- Training TensorFlow Models (optional) ---")
-    # train_all_models_and_predict()
-    # print("Training complete (if run). Prediction from training is in prediction.txt")
+    print("\n--- Attempting Prediction with Enhanced Models ---")
+    prediction_result_enhanced = predict_with_tensorflow_model(use_enhanced_data=True)
+    if prediction_result_enhanced['status'] == 'success':
+        print(f"Numbers (enhanced): {prediction_result_enhanced['numbers']}")
+        print(f"Stars (enhanced): {prediction_result_enhanced['stars']}")
+        print(f"Target Date (enhanced): {prediction_result_enhanced['target_draw_date']}")
+    else:
+        print(f"Prediction failed (enhanced): {prediction_result_enhanced['message']}")
+    print(f"Model: {prediction_result_enhanced['model_name']}, Status: {prediction_result_enhanced['status']}")
+
+    # Example calls for training (optional, can be commented out):
+    # print("\n--- Training Standard TensorFlow Models (optional) ---")
+    # train_all_models_and_predict(use_enhanced_data=False)
+    # print("\n--- Training Enhanced TensorFlow Models (optional) ---")
+    # train_all_models_and_predict(use_enhanced_data=True)
+    # print("Training complete (if run).")
 
