@@ -125,7 +125,9 @@ Le projet inclut une interface en ligne de commande (CLI) pour faciliter la mise
         *   `final_valide`: Utilise la logique de `predicteur_final_valide.py` (modèle Bayesian Ridge validé scientifiquement).
         *   `revolutionnaire`: Utilise la logique de `revolutionary_predictor.py` (combinaison de méthodes innovantes).
         *   `agrege`: Utilise la logique de `aggregated_final_predictor.py` (agrégation de résultats de multiples systèmes). *Note : Ce modèle peut nécessiter l'existence de fichiers de résultats intermédiaires dans le répertoire `results/` pour fonctionner comme prévu.*
-        *   `tf_lstm`: Utilise le modèle LSTM basé sur TensorFlow de `euromillions_model.py`. *Note : Ce modèle charge des poids pré-entraînés. S'ils ne sont pas disponibles, il utilisera les modèles factices créés pour le développement ou pourrait échouer si ceux-ci sont absents.*
+        *   `tf_lstm_std`: Utilise le modèle LSTM basé sur TensorFlow de `euromillions_model.py`, entraîné sur `euromillions_dataset.csv`.
+        *   `tf_lstm_enhanced`: Utilise le modèle LSTM basé sur TensorFlow de `euromillions_model.py`, entraîné sur `euromillions_enhanced_dataset.csv`.
+        *Note : Ces modèles chargent des poids pré-entraînés. Utilisez la commande `train-tf-model` pour les entraîner.*
     *   **Exemples :**
         ```bash
         python -m cli.main predict final_valide
@@ -133,12 +135,34 @@ Le projet inclut une interface en ligne de commande (CLI) pour faciliter la mise
         ```bash
         python -m cli.main predict revolutionnaire
         ```
+        ```bash
+        python -m cli.main predict tf_lstm_std
+        ```
 
 *   **`predict-consensus`**
-    *   **Description :** Génère une méta-prédiction en exécutant tous les modèles de prédiction disponibles (`final_valide`, `revolutionnaire`, `agrege`, `tf_lstm`), puis en agrégeant leurs résultats. La prédiction finale est basée sur les 5 numéros et les 2 étoiles qui apparaissent le plus fréquemment parmi toutes les prédictions individuelles. Cette commande cible le prochain tirage Euromillions officiel à venir.
+    *   **Description :** Génère une méta-prédiction en exécutant les modèles de prédiction spécifiés (ou tous par défaut), puis en agrégeant leurs résultats. La prédiction finale est basée sur les 5 numéros et les 2 étoiles qui apparaissent le plus fréquemment, en tenant compte d'un système de pondération basique qui accorde plus d'importance à certains modèles (ex: `final_valide`). Cette commande cible le prochain tirage Euromillions officiel à venir.
+    *   **Options :**
+        *   `--models [NOM_MODELE ...]` : Optionnel. Permet de spécifier une liste de noms de modèles à inclure dans le consensus (par exemple : `--models final_valide tf_lstm_std`). Les modèles disponibles sont: `final_valide`, `revolutionnaire`, `agrege`, `tf_lstm_std`, `tf_lstm_enhanced`. Si non fourni, tous les modèles disponibles sont utilisés.
     *   **Exemple :**
         ```bash
         python -m cli.main predict-consensus
+        ```
+        ```bash
+        python -m cli.main predict-consensus --models final_valide revolutionnaire tf_lstm_enhanced
+        ```
+
+*   **`train-tf-model`**
+    *   **Description :** Entraîne les modèles TensorFlow (LSTM) pour la prédiction des numéros et des étoiles. Les modèles entraînés sont sauvegardés dans des chemins prédéfinis et seront utilisés par les commandes `predict tf_lstm_std` ou `predict tf_lstm_enhanced`.
+    *   **Options :**
+        *   `--use-enhanced-data` : Optionnel. Si présent, entraîne les modèles en utilisant le fichier `euromillions_enhanced_dataset.csv`. Par défaut (si non présent), utilise `euromillions_dataset.csv`.
+    *   **Exemples :**
+        ```bash
+        # Entraîner avec le dataset standard
+        python -m cli.main train-tf-model
+        ```
+        ```bash
+        # Entraîner avec le dataset amélioré
+        python -m cli.main train-tf-model --use-enhanced-data
         ```
 
 ### Exécution du prédicteur principal :

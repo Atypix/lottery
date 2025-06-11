@@ -12,7 +12,7 @@ from fetch_real_data import update_euromillions_data
 from predicteur_final_valide import FinalValidatedPredictor
 from revolutionary_predictor import RevolutionaryPredictor # Renamed import
 from aggregated_final_predictor import AggregatedFinalPredictor
-from euromillions_model import predict_with_tensorflow_model
+from euromillions_model import predict_with_tensorflow_model, train_all_models_and_predict # Updated import
 
 # --- Model Invocation Functions ---
 def run_final_valide():
@@ -62,21 +62,51 @@ def run_agrege():
             'message': f"An error occurred with aggregated model: {e}"
         }
 
-def run_consensus_by_frequency_prediction():
+MODEL_WEIGHTS = {
+    'final_valide': 3,
+    'revolutionnaire': 2,
+    'agrege': 2,
+    'tf_lstm_std': 1,
+    'tf_lstm_enhanced': 1
+}
+
+# Wrappers for TF model predictions
+def run_tf_lstm_std():
+    return predict_with_tensorflow_model(use_enhanced_data=False)
+
+def run_tf_lstm_enhanced():
+    return predict_with_tensorflow_model(use_enhanced_data=True)
+
+def run_consensus_by_frequency_prediction(selected_model_names: list = None): # NEW signature
     print("🤖 Generating consensus prediction by frequency...")
-    print("Running all available models. This may take some time...")
 
     target_date_obj = get_next_euromillions_draw_date("euromillions_enhanced_dataset.csv")
     target_date_str = target_date_obj.strftime('%Y-%m-%d')
 
     all_predicted_numbers = []
     all_predicted_stars = []
-
     successful_models_count = 0
 
-    for model_name, model_func in AVAILABLE_MODELS.items():
-        # We don't want to recursively call ourselves if this consensus model is ever added to AVAILABLE_MODELS
-        # For now, it's a separate command, so this is fine.
+    models_to_run = {}
+    if selected_model_names and len(selected_model_names) > 0: # Check if list is not empty
+        print(f"Running consensus for selected models: {', '.join(selected_model_names)}")
+        for name in selected_model_names:
+            if name in AVAILABLE_MODELS:
+                models_to_run[name] = AVAILABLE_MODELS[name]
+            else:
+                print(f"Warning: Model '{name}' specified for consensus not found in AVAILABLE_MODELS. Skipping.")
+        if not models_to_run: # No valid models were selected from the provided list
+            return {
+                'numbers': [], 'stars': [], 'confidence': None,
+                'model_name': 'consensus_by_frequency', 'status': 'failure',
+                'message': 'No valid models selected for consensus, or all specified models were invalid.',
+                'target_draw_date': target_date_str
+            }
+    else: # selected_model_names is None or empty list
+        print("Running consensus for all available models (or no models specified).")
+        models_to_run = AVAILABLE_MODELS
+
+    for model_name, model_func in models_to_run.items():
         print(f"  - Running model: {model_name}...")
         try:
             prediction_result = model_func()
@@ -84,10 +114,17 @@ def run_consensus_by_frequency_prediction():
                 print(f"    Model {model_name} failed or returned no data: {prediction_result.get('message')}")
                 continue
 
-            all_predicted_numbers.extend(prediction_result['numbers'])
-            all_predicted_stars.extend(prediction_result['stars'])
+            weight = MODEL_WEIGHTS.get(model_name, 1) # Get weight, default to 1
+            print(f"    Model {model_name} contributed with weight: {weight}")
+
+            for _ in range(weight): # Add numbers/stars 'weight' times
+                all_predicted_numbers.extend(prediction_result['numbers'])
+                all_predicted_stars.extend(prediction_result['stars'])
+
             successful_models_count +=1
-            print(f"    Model {model_name} contributed: Nums={prediction_result['numbers']}, Stars={prediction_result['stars']}")
+            # Print statement for contribution already exists below, or can be merged.
+            # For now, let's keep the original print statement which shows the raw numbers.
+            print(f"    Model {model_name} (raw prediction): Nums={prediction_result['numbers']}, Stars={prediction_result['stars']}")
         except Exception as e:
             print(f"    Error running model {model_name}: {e}")
 
@@ -137,8 +174,9 @@ def run_consensus_by_frequency_prediction():
         'message': f'Consensus prediction generated from {successful_models_count} models.',
         'target_draw_date': target_date_str,
         'details': {
-            'number_frequencies': dict(num_counts),
-            'star_frequencies': dict(star_counts)
+            'number_frequencies': dict(num_counts), # This will reflect weighted counts
+            'star_frequencies': dict(star_counts),   # This will reflect weighted counts
+            'model_weights_used': {name: MODEL_WEIGHTS.get(name, 1) for name in models_to_run.keys()}
         }
     }
 
@@ -146,7 +184,8 @@ AVAILABLE_MODELS = {
     'final_valide': run_final_valide,
     'revolutionnaire': run_revolutionnaire,
     'agrege': run_agrege,
-    'tf_lstm': predict_with_tensorflow_model
+    'tf_lstm_std': run_tf_lstm_std,        # NEW
+    'tf_lstm_enhanced': run_tf_lstm_enhanced # NEW
 }
 
 def display_prediction(result):
@@ -199,12 +238,29 @@ def main():
     parser_predict = subparsers.add_parser('predict', help=predict_help, formatter_class=argparse.RawTextHelpFormatter)
     parser_predict.add_argument('model_name', choices=AVAILABLE_MODELS.keys(), metavar='model_name', help='Name of the prediction model to use')
 
-    # New predict-consensus command
+    # predict-consensus command
     parser_consensus = subparsers.add_parser(
         'predict-consensus',
-        help='Generate a prediction by aggregating results from all available models based on frequency.'
+        help='Generate a prediction by aggregating results from specified models (or all if none specified) based on frequency.'
     )
-    # This command doesn't need further arguments for now.
+    parser_consensus.add_argument(
+        '--models',
+        nargs='*', # Allows zero or more arguments
+        choices=list(AVAILABLE_MODELS.keys()), # Use a list of current keys
+        metavar='MODEL_NAME',
+        help=f'Optional: List of model names to include in the consensus. Available: {", ".join(AVAILABLE_MODELS.keys())}. If not provided, all are used.'
+    )
+
+    # New train-tf-model command
+    parser_train_tf = subparsers.add_parser(
+        'train-tf-model',
+        help='Train the TensorFlow LSTM models. Models are saved to predefined paths.'
+    )
+    parser_train_tf.add_argument(
+        '--use-enhanced-data',
+        action='store_true', # Makes it a flag, if present, value is True
+        help='Use euromillions_enhanced_dataset.csv for training. Default is euromillions_dataset.csv.'
+    )
 
     args = parser.parse_args()
 
@@ -252,12 +308,28 @@ def main():
     elif args.command == 'predict-consensus':
         print("🤝 Running consensus prediction mode...")
         try:
-            prediction_result = run_consensus_by_frequency_prediction()
+            # Pass the list of model names from args.models
+            prediction_result = run_consensus_by_frequency_prediction(selected_model_names=args.models)
             display_prediction(prediction_result) # Use the existing display function
         except Exception as e:
             print(f"An error occurred during consensus prediction: {e}")
             # import traceback # For debugging
             # traceback.print_exc()
+
+    elif args.command == 'train-tf-model':
+        print(f"🏋️ Starting TensorFlow model training...")
+        print(f"Using enhanced data: {args.use_enhanced_data}")
+        try:
+            # train_all_models_and_predict now accepts use_enhanced_data
+            train_all_models_and_predict(use_enhanced_data=args.use_enhanced_data)
+            print("✅ TensorFlow model training process completed.")
+            print(f"Models saved based on {'enhanced' if args.use_enhanced_data else 'standard'} dataset configuration.")
+            # The predict command will now use tf_lstm_std or tf_lstm_enhanced
+            print("You can now use 'predict tf_lstm_std' or 'predict tf_lstm_enhanced'.")
+        except Exception as e:
+            print(f"An error occurred during TensorFlow model training: {e}")
+            import traceback # For debugging
+            traceback.print_exc()
 
     else: # Should not be reached if subparsers are required
         parser.print_help()
