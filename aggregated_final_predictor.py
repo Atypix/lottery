@@ -17,10 +17,11 @@ import os
 import json
 import pandas as pd
 import numpy as np
-from datetime import datetime
+from datetime import datetime, date # Added date
 import glob
 from collections import defaultdict, Counter
 import matplotlib.pyplot as plt
+from common.date_utils import get_next_euromillions_draw_date # Added
 import seaborn as sns
 from sklearn.ensemble import VotingRegressor, RandomForestRegressor
 from sklearn.linear_model import BayesianRidge
@@ -36,6 +37,10 @@ class AggregatedFinalPredictor:
     def __init__(self):
         print("🎯 GÉNÉRATEUR DE TIRAGE FINAL AGRÉGÉ 🎯")
         print("=" * 70)
+
+        self.actual_next_draw_date = get_next_euromillions_draw_date("euromillions_enhanced_dataset.csv")
+        print(f"🔮 PRÉDICTION POUR LE TIRAGE DU: {self.actual_next_draw_date.strftime('%d/%m/%Y')} (dynamically determined)")
+
         print("Objectif: Créer la prédiction ultime basée sur tous les apprentissages")
         print("Méthode: Agrégation intelligente de 36 systèmes développés")
         print("=" * 70)
@@ -43,11 +48,11 @@ class AggregatedFinalPredictor:
         self.setup_aggregation_environment()
         self.load_comprehensive_learnings()
         
-        # Tirage de référence pour validation
+        # Tirage de référence pour validation - REMAINS FIXED
         self.reference_draw = {
-            'numbers': [20, 21, 29, 30, 35],
-            'stars': [2, 12],
-            'date': '2025-06-06'
+            'numbers': [20, 21, 29, 30, 35], # Example numbers
+            'stars': [2, 12],               # Example stars
+            'date': '2025-06-06' # This is a FIXED reference for validation metrics
         }
         
         self.aggregated_prediction = {}
@@ -511,12 +516,14 @@ class AggregatedFinalPredictor:
         print("✅ Métriques de confiance calculées")
         return metrics
         
-    def generate_aggregation_visualizations(self, prediction, consensus, metrics):
+    def generate_aggregation_visualizations(self, prediction, consensus, metrics, output_filename): # Added output_filename
         """Génère les visualisations d'agrégation."""
         print("📊 Génération des visualisations d'agrégation...")
         
         fig, axes = plt.subplots(2, 2, figsize=(16, 12))
-        fig.suptitle('Tirage Final Agrégé - Analyse Complète', fontsize=16, fontweight='bold')
+        # Add dynamic date to title if possible, or keep generic
+        title_date_str = self.actual_next_draw_date.strftime('%d/%m/%Y')
+        fig.suptitle(f'Tirage Final Agrégé - Analyse pour le {title_date_str}', fontsize=16, fontweight='bold')
         
         # 1. Consensus des numéros
         top_numbers = consensus['top_numbers'][:15]
@@ -597,21 +604,28 @@ class AggregatedFinalPredictor:
         axes[1,1].axis('off')
         
         plt.tight_layout()
-        plt.savefig(f'{self.aggregation_dir}/visualizations/final_aggregated_prediction.png', 
-                   dpi=300, bbox_inches='tight')
+        plt.savefig(output_filename, dpi=300, bbox_inches='tight') # Use dynamic filename
         plt.close()
         
-        print("✅ Visualisations d'agrégation générées")
+        print(f"✅ Visualisations d'agrégation générées: {output_filename}")
         
     def save_final_prediction(self, prediction, consensus, insights, patterns, metrics):
         """Sauvegarde la prédiction finale."""
         print("💾 Sauvegarde de la prédiction finale...")
         
+        date_str_for_filename = self.actual_next_draw_date.strftime('%Y-%m-%d')
+
+        json_filename = f'{self.aggregation_dir}/final_aggregated_prediction_{date_str_for_filename}.json'
+        ticket_filename = f'{self.aggregation_dir}/ticket_final_agrege_{date_str_for_filename}.txt'
+        report_filename = f'{self.aggregation_dir}/rapport_final_agrege_{date_str_for_filename}.txt'
+        # Visualization filename is passed to generate_aggregation_visualizations, defined in run_final_aggregation
+
         # Données complètes
         final_data = {
             'generation_date': datetime.now().isoformat(),
-            'reference_draw': self.reference_draw,
-            'final_prediction': prediction,
+            'target_draw_date_prediction': self.actual_next_draw_date.strftime('%Y-%m-%d'), # Add target date
+            'reference_draw_for_validation': self.reference_draw, # Clarify this is for validation
+            'final_prediction': prediction, # This now includes target_draw_date
             'consensus_analysis': consensus,
             'best_practices_insights': insights,
             'historical_patterns': patterns,
@@ -630,13 +644,15 @@ class AggregatedFinalPredictor:
         }
         
         # Sauvegarde JSON
-        with open(f'{self.aggregation_dir}/final_aggregated_prediction.json', 'w') as f:
+        with open(json_filename, 'w') as f:
             json.dump(final_data, f, indent=2, default=str)
         
         # Ticket de prédiction
         ticket_content = f"""
 ╔══════════════════════════════════════════════════════════════════════╗
 ║                    TICKET EUROMILLIONS FINAL AGRÉGÉ                 ║
+╠══════════════════════════════════════════════════════════════════════╣
+║  🔮 PRÉDICTION POUR LE: {self.actual_next_draw_date.strftime('%d/%m/%Y')}                  ║
 ╠══════════════════════════════════════════════════════════════════════╣
 ║                                                                      ║
 ║  🎯 PRÉDICTION BASÉE SUR L'AGRÉGATION DE 36 SYSTÈMES D'IA 🎯       ║
@@ -689,9 +705,10 @@ DÉTAILS TECHNIQUES:
 
 ## RÉSUMÉ EXÉCUTIF
 Date de génération: {datetime.now().strftime('%d/%m/%Y %H:%M')}
-Tirage de référence: {self.reference_draw['numbers']} + {self.reference_draw['stars']} ({self.reference_draw['date']})
+Date du tirage cible pour cette prédiction: {self.actual_next_draw_date.strftime('%d/%m/%Y')}
+Tirage de référence pour la validation des métriques: {self.reference_draw['numbers']} + {self.reference_draw['stars']} ({self.reference_draw['date']})
 
-## PRÉDICTION FINALE
+## PRÉDICTION FINALE (pour le {self.actual_next_draw_date.strftime('%d/%m/%Y')})
 **Numéros:** {' - '.join(map(str, prediction['numbers']))}
 **Étoiles:** {' - '.join(map(str, prediction['stars']))}
 **Confiance:** {metrics['confidence_percentage']:.1f}%
@@ -805,10 +822,10 @@ pour l'Euromillions.
 Rapport généré automatiquement par le Générateur de Tirage Final Agrégé
 """
         
-        with open(f'{self.aggregation_dir}/rapport_final_agrege.txt', 'w', encoding='utf-8') as f:
+        with open(report_filename, 'w', encoding='utf-8') as f:
             f.write(report_content)
         
-        print("✅ Prédiction finale sauvegardée")
+        print(f"✅ Prédiction finale sauvegardée ({json_filename}, {ticket_filename}, {report_filename})")
         
     def run_final_aggregation(self):
         """Exécute l'agrégation finale complète."""
@@ -830,14 +847,19 @@ Rapport généré automatiquement par le Générateur de Tirage Final Agrégé
         # 4. Création de la prédiction d'ensemble
         print("🎯 Phase 4: Prédiction d'ensemble...")
         prediction = self.create_ensemble_prediction(consensus, insights, patterns)
+        prediction['target_draw_date'] = self.actual_next_draw_date.strftime('%Y-%m-%d') # Add target date
         
         # 5. Calcul des métriques de confiance
         print("📊 Phase 5: Métriques de confiance...")
         metrics = self.calculate_confidence_metrics(prediction, consensus, insights, patterns)
         
+        # Define dynamic visualization filename here to pass it down
+        date_str_for_filename = self.actual_next_draw_date.strftime('%Y-%m-%d')
+        visualization_filename = f'{self.aggregation_dir}/visualizations/final_aggregated_prediction_{date_str_for_filename}.png'
+
         # 6. Visualisations
         print("📊 Phase 6: Visualisations...")
-        self.generate_aggregation_visualizations(prediction, consensus, metrics)
+        self.generate_aggregation_visualizations(prediction, consensus, metrics, visualization_filename) # Pass filename
         
         # 7. Sauvegarde finale
         print("💾 Phase 7: Sauvegarde...")
@@ -860,26 +882,28 @@ if __name__ == "__main__":
     # Lancement de l'agrégation finale
     aggregator = AggregatedFinalPredictor()
     results = aggregator.run_final_aggregation() # This is the comprehensive dict
-    
+
     # Extract standardized prediction
     prediction_numbers = results.get('prediction', {}).get('numbers', [])
     prediction_stars = results.get('prediction', {}).get('stars', [])
     prediction_confidence = results.get('metrics', {}).get('confidence_percentage', 0.0)
+    # Get target_draw_date from the results, fallback to aggregator's attribute if needed
+    target_date_str = results.get('prediction', {}).get('target_draw_date', aggregator.actual_next_draw_date.strftime('%Y-%m-%d'))
+
     
     standardized_output = {
         'numbers': prediction_numbers,
         'stars': prediction_stars,
         'confidence': prediction_confidence,
-        'model_name': 'aggregated_final_predictor'
+        'model_name': 'aggregated_final_predictor',
+        'target_draw_date': target_date_str
     }
     
-    print(f"\n🎯 PRÉDICTION FINALE AGRÉGÉE (Standardized Output):")
+    print(f"\n🎯 PRÉDICTION FINALE AGRÉGÉE (Pour le {standardized_output['target_draw_date']}):")
     print(f"Numéros: {standardized_output['numbers']}")
     print(f"Étoiles: {standardized_output['stars']}")
-    print(f"Confiance: {standardized_output['confidence']:.1f}%") # Assuming confidence is percentage
+    print(f"Confiance: {standardized_output['confidence']:.1f}%")
     print(f"Modèle: {standardized_output['model_name']}")
 
-    # Keep other prints from original if __name__ block if desired
-    # print(f"Validation: {results.get('metrics', {}).get('validation_matches', {}).get('total_matches', 'N/A')}/7 correspondances")
     print("\n🎉 TIRAGE FINAL AGRÉGÉ GÉNÉRÉ! 🎉")
 

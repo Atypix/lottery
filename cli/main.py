@@ -7,7 +7,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from fetch_real_data import update_euromillions_data
 from predicteur_final_valide import FinalValidatedPredictor
-from revolutionary_predictor_10_06_2025 import RevolutionaryPredictor
+from revolutionary_predictor import RevolutionaryPredictor # Renamed import
 from aggregated_final_predictor import AggregatedFinalPredictor
 from euromillions_model import predict_with_tensorflow_model
 
@@ -40,9 +40,11 @@ def run_agrege():
             'numbers': results.get('prediction', {}).get('numbers', []),
             'stars': results.get('prediction', {}).get('stars', []),
             'confidence': results.get('metrics', {}).get('confidence_percentage', 0.0),
-            'model_name': 'aggregated_final_predictor', # Added manually as it's not in results
+            'model_name': 'agrege', # Align with CLI key
             'status': 'success',
-            'message': 'Aggregated prediction generated.'
+            'message': 'Aggregated prediction generated.',
+            # aggregated_final_predictor.py now adds target_draw_date to its prediction dict
+            'target_draw_date': results.get('prediction', {}).get('target_draw_date')
         }
     except FileNotFoundError as e:
         return {
@@ -65,32 +67,39 @@ AVAILABLE_MODELS = {
 }
 
 def display_prediction(result):
+    model_name_display = result.get('model_name', 'Unknown Model')
+    target_date_display = result.get('target_draw_date') # Get target_draw_date
+
+    print(f"--- Prediction Results: {model_name_display} ---")
+    if target_date_display: # Display if available
+        print(f"For Draw Date: {target_date_display}")
+
     if result.get('status') == 'failure':
-        print(f"--- Prediction Error: {result.get('model_name', 'Unknown Model')} ---")
         print(f"Error: {result.get('message', 'Prediction failed.')}")
         return
 
-    print(f"--- Prediction Results: {result.get('model_name', 'Unknown Model')} ---")
     print(f"Numbers: {result.get('numbers', 'N/A')}")
     print(f"Stars: {result.get('stars', 'N/A')}")
 
     confidence = result.get('confidence')
-    model_name = result.get('model_name')
+    # model_name is already extracted as model_name_display, use it for logic
+    # This ensures we use the name that was part of the result dict.
 
     if confidence is not None:
         if isinstance(confidence, float):
-            if model_name == 'revolutionary_predictor_10_06_2025': # Name from revolutionary_predictor
+            if model_name_display == 'revolutionnaire':
                  print(f"Confidence: {confidence:.1%}")
-            elif model_name == 'aggregated_final_predictor': # Name from run_agrege wrapper
+            elif model_name_display == 'agrege':
                  print(f"Confidence: {confidence:.1f}%")
-            elif model_name == 'predicteur_final_valide': # Name from FinalValidatedPredictor
+            elif model_name_display == 'final_valide':
                  print(f"Confidence: {confidence}/10")
-            else: # Other float confidences
+            # tf_lstm has confidence: None, so it's handled by the else below
+            else: # Other float confidences (if any new model returns float differently)
                  print(f"Confidence: {confidence}")
-        else: # Non-float confidences
+        else: # Non-float confidences (currently none of the models return non-float)
              print(f"Confidence: {confidence}")
-    else: # tf_lstm has None confidence, or other models might not return it
-        print("Confidence: Not Available")
+    else:
+        print("Confidence: Not Available") # Handles tf_lstm and any other case
 
 def main():
     parser = argparse.ArgumentParser(description="Euromillions AI CLI", formatter_class=argparse.RawTextHelpFormatter)

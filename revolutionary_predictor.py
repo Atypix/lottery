@@ -9,10 +9,11 @@ Utilisation des données fraîches avec innovation totale
 import pandas as pd
 import numpy as np
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date # Added date
 import warnings
 warnings.filterwarnings('ignore')
 
+from common.date_utils import get_next_euromillions_draw_date # Added
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.linear_model import BayesianRidge
 from sklearn.neural_network import MLPRegressor
@@ -28,12 +29,17 @@ class RevolutionaryPredictor:
     def __init__(self):
         print("🚀 PRÉDICTEUR RÉVOLUTIONNAIRE - HORS SENTIERS BATTUS 🚀")
         print("=" * 60)
-        print("🎯 Cible: Tirage du 10/06/2025")
+        # print("🎯 Cible: Tirage du 10/06/2025") # Old static date
+
+        next_draw_date_obj = get_next_euromillions_draw_date("euromillions_enhanced_dataset.csv")
+        self.target_date = next_draw_date_obj.strftime('%d/%m/%Y') # Format as used before
+        self.dynamic_date_obj = next_draw_date_obj
+
+        print(f"🎯 Cible: Tirage du {self.target_date} (dynamically determined)")
         print("💡 Innovation: Techniques jamais utilisées")
         print("🔥 Révolution: Sortir de tous les patterns classiques")
         print("=" * 60)
         
-        self.target_date = "10/06/2025"
         self.load_fresh_data()
         
     def load_fresh_data(self):
@@ -500,47 +506,53 @@ class RevolutionaryPredictor:
         }
         
         # Add model_name to the final_prediction dict that will be returned
-        final_prediction['model_name'] = 'revolutionary_predictor_10_06_2025'
+        final_prediction['model_name'] = 'revolutionnaire' # Align with CLI key
+        final_prediction['target_draw_date'] = self.target_date # DD/MM/YYYY string for display consistency
+
+        date_str_for_filename = self.dynamic_date_obj.strftime('%Y-%m-%d')
+        json_filename = f"prediction_revolutionnaire_{date_str_for_filename}.json"
+        ticket_filename = f"ticket_revolutionnaire_{date_str_for_filename}.txt"
 
         # Save the more comprehensive 'result' dictionary to JSON
-        with open('prediction_revolutionnaire_10_06_2025.json', 'w') as f:
+        with open(json_filename, 'w') as f:
             json.dump(result, f, indent=2)
         
         # Ticket révolutionnaire
-        ticket = f"""
-🚀 TICKET RÉVOLUTIONNAIRE EUROMILLIONS - 10/06/2025
-==================================================
-🌟 HORS SENTIERS BATTUS - INNOVATION TOTALE
+        # Update date in ticket text to be dynamic via self.target_date
+        # ticket = f"""
+# 🚀 TICKET RÉVOLUTIONNAIRE EUROMILLIONS - {self.target_date}
+# ==================================================
+# 🌟 HORS SENTIERS BATTUS - INNOVATION TOTALE
 
-📅 TIRAGE : MARDI 10 JUIN 2025
-🔥 RÉVOLUTION : 5 méthodes jamais utilisées
+# 📅 TIRAGE : {self.target_date}
+# 🔥 RÉVOLUTION : 5 méthodes jamais utilisées
 
-🎯 PRÉDICTION RÉVOLUTIONNAIRE :
-   🔢 NUMÉROS : {' - '.join(map(str, final_prediction['numbers']))}
-   ⭐ ÉTOILES : {' - '.join(map(str, final_prediction['stars']))}
+# 🎯 PRÉDICTION RÉVOLUTIONNAIRE :
+#    🔢 NUMÉROS : {' - '.join(map(str, final_prediction['numbers']))}
+#    ⭐ ÉTOILES : {' - '.join(map(str, final_prediction['stars']))}
 
-📊 CONFIANCE : {final_prediction['confidence']:.1%}
+# 📊 CONFIANCE : {final_prediction['confidence']:.1%}
 
-🚀 RÉVOLUTIONS APPLIQUÉES :
-   🌪️ Théorie du chaos (attracteurs étranges)
-   ⚛️ Intrication quantique (superposition d'états)
-   🌀 Spirale de Fibonacci (ratio doré cosmique)
-   🧠 Rêve neuronal (hallucination contrôlée)
-   💎 Cristaux temporels (résonance fréquentielle)
+# 🚀 RÉVOLUTIONS APPLIQUÉES :
+#    🌪️ Théorie du chaos (attracteurs étranges)
+#    ⚛️ Intrication quantique (superposition d'états)
+#    🌀 Spirale de Fibonacci (ratio doré cosmique)
+#    🧠 Rêve neuronal (hallucination contrôlée)
+#    💎 Cristaux temporels (résonance fréquentielle)
 
-🌟 CETTE PRÉDICTION SORT COMPLÈTEMENT
-   DES SENTIERS BATTUS TRADITIONNELS !
+# 🌟 CETTE PRÉDICTION SORT COMPLÈTEMENT
+#    DES SENTIERS BATTUS TRADITIONNELS !
 
-🔥 RÉVOLUTION TOTALE ! 🔥
-"""
+# 🔥 RÉVOLUTION TOTALE ! 🔥
+# """
         
-        with open('ticket_revolutionnaire_10_06_2025.txt', 'w') as f:
-            f.write(ticket)
+        # with open(ticket_filename, 'w') as f:
+        #     f.write(ticket) # Commented out TXT file writing
         
-        print(f"\n💾 Prédiction révolutionnaire sauvegardée !")
+        print(f"\n💾 Prédiction révolutionnaire (JSON only) sauvegardée !")
         print(f"📁 Fichiers générés :")
-        print(f"   - prediction_revolutionnaire_10_06_2025.json")
-        print(f"   - ticket_revolutionnaire_10_06_2025.txt")
+        print(f"   - {json_filename}")
+        # print(f"   - {ticket_filename}") # Commented out print for TXT
         
         return final_prediction
 

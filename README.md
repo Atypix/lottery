@@ -27,7 +27,7 @@ Le projet a évolué à travers 5 phases majeures :
 - `predicteur_final_valide.py` - Prédicteur final scientifiquement validé (100% correspondances)
 - `euromillions_model.py` - Modèle TensorFlow initial (demande originale)
 - `aggregated_final_predictor.py` - Agrégation de tous les enseignements
-- `revolutionary_predictor_10_06_2025.py` - Prédicteur révolutionnaire hors sentiers battus
+- `revolutionary_predictor.py` - Prédicteur révolutionnaire hors sentiers battus (prédit pour le prochain tirage)
 
 ### 🔬 SYSTÈMES SCIENTIFIQUES
 - `scientific_euromillions_predictor.py` - Système scientifique rigoureux
@@ -70,17 +70,24 @@ Le projet a évolué à travers 5 phases majeures :
 - `*.txt` - Tickets et résultats de prédictions
 - `*.json` - Données de prédictions et configurations
 
-## 🏆 PRÉDICTIONS FINALES RECOMMANDÉES
+## 🏆 OBTENIR DES PRÉDICTIONS ACTUELLES
 
-### 🎯 POUR LE 10/06/2025 (Prédicteur Final Validé)
-**NUMÉROS : 31 - 33 - 37 - 45 - 50**
-**ÉTOILES : 2 - 12**
-**CONFIANCE : 8.50/10**
+Les modèles de prédiction de ce projet ont été adaptés pour calculer les numéros pour le **prochain tirage Euromillions officiel à venir**.
 
-### 🚀 ALTERNATIVE RÉVOLUTIONNAIRE (Hors sentiers battus)
-**NUMÉROS : 11 - 28 - 29 - 42 - 50**
-**ÉTOILES : 1 - 5**
-**CONFIANCE : 85.0%**
+Pour obtenir les prédictions les plus récentes :
+1.  Assurez-vous que vos données sont à jour en utilisant la commande CLI :
+    ```bash
+    python -m cli.main update-data
+    ```
+2.  Utilisez la commande CLI `predict` avec le modèle de votre choix. Par exemple :
+    ```bash
+    python -m cli.main predict final_valide
+    ```
+    ou
+    ```bash
+    python -m cli.main predict revolutionnaire
+    ```
+Consultez la section "Interface en Ligne de Commande (CLI)" pour plus de détails sur les modèles disponibles et l'utilisation des commandes. Les prédictions affichées indiqueront la date du tirage pour lequel elles ont été calculées.
 
 ## 🔧 UTILISATION
 
@@ -113,9 +120,10 @@ Le projet inclut une interface en ligne de commande (CLI) pour faciliter la mise
 *   **`predict <model_name>`**
     *   **Description :** Génère une prédiction de numéros et d'étoiles Euromillions en utilisant le modèle spécifié.
     *   **Argument :** `<model_name>` - Le nom du modèle à utiliser.
+    *   **Note importante :** Toutes les prédictions générées via la CLI ciblent désormais dynamiquement le prochain tirage Euromillions officiel à venir.
     *   **Modèles disponibles :**
         *   `final_valide`: Utilise la logique de `predicteur_final_valide.py` (modèle Bayesian Ridge validé scientifiquement).
-        *   `revolutionnaire`: Utilise la logique de `revolutionary_predictor_10_06_2025.py` (combinaison de méthodes innovantes).
+        *   `revolutionnaire`: Utilise la logique de `revolutionary_predictor.py` (combinaison de méthodes innovantes).
         *   `agrege`: Utilise la logique de `aggregated_final_predictor.py` (agrégation de résultats de multiples systèmes). *Note : Ce modèle peut nécessiter l'existence de fichiers de résultats intermédiaires dans le répertoire `results/` pour fonctionner comme prévu.*
         *   `tf_lstm`: Utilise le modèle LSTM basé sur TensorFlow de `euromillions_model.py`. *Note : Ce modèle charge des poids pré-entraînés. S'ils ne sont pas disponibles, il utilisera les modèles factices créés pour le développement ou pourrait échouer si ceux-ci sont absents.*
     *   **Exemples :**
@@ -162,10 +170,10 @@ python comprehensive_system_analyzer.py
 
 ## 🎯 RECOMMANDATIONS D'USAGE
 
-1. **Pour une approche scientifique** : Utiliser `predicteur_final_valide.py`
-2. **Pour l'innovation** : Utiliser `revolutionary_predictor_10_06_2025.py`
+1. **Pour une approche scientifique** : Utiliser `predicteur_final_valide.py` (via la CLI ou directement)
+2. **Pour l'innovation** : Utiliser `revolutionary_predictor.py` (via la CLI ou directement)
 3. **Pour l'analyse** : Utiliser `comprehensive_system_analyzer.py`
-4. **Pour l'agrégation** : Utiliser `aggregated_final_predictor.py`
+4. **Pour l'agrégation** : Utiliser `aggregated_final_predictor.py` (via la CLI ou directement)
 
 ## ⚠️ AVERTISSEMENT
 Ce projet est réalisé à des fins éducatives et de recherche en IA. L'Euromillions reste un jeu de hasard, et aucun système ne peut garantir des gains. Les prédictions sont basées sur l'analyse statistique et l'intelligence artificielle.
