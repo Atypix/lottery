@@ -28,18 +28,32 @@ def fetch_euromillions_data():
             df = pd.DataFrame(data)
             
             # Nettoyer et formater les données
-            df = clean_and_format_data(df)
+            df = clean_and_format_data(df) # This sorts by Date ascending
             
-            return df, "API"
+            latest_draw_info = None
+            # Check source == "API" implicitly by being in this block
+            if df is not None and not df.empty: # Check df is not None before checking if empty
+                latest_draw_series = df.iloc[-1] # Last row is the latest draw
+                latest_draw_info = {
+                    'Date': latest_draw_series['Date'].strftime('%Y-%m-%d'),
+                    'N1': int(latest_draw_series['N1']), # Ensure standard int type
+                    'N2': int(latest_draw_series['N2']),
+                    'N3': int(latest_draw_series['N3']),
+                    'N4': int(latest_draw_series['N4']),
+                    'N5': int(latest_draw_series['N5']),
+                    'E1': int(latest_draw_series['E1']),
+                    'E2': int(latest_draw_series['E2'])
+                }
+            return df, "API", latest_draw_info
         else:
             print(f"Erreur API: {response.status_code}")
             # Utiliser le jeu de données existant comme fallback
-            return use_existing_dataset() # This will now return (df, source)
+            return use_existing_dataset()
             
     except Exception as e:
         print(f"Erreur lors de la récupération des données: {e}")
         # Utiliser le jeu de données existant comme fallback
-        return use_existing_dataset() # This will now return (df, source)
+        return use_existing_dataset()
 
 def use_existing_dataset():
     """
@@ -52,10 +66,10 @@ def use_existing_dataset():
         print("Utilisation du jeu de données existant...")
         df = pd.read_csv("euromillions_dataset.csv")
         print(f"Jeu de données existant chargé: {len(df)} tirages")
-        return df, "CSV"
+        return df, "CSV", None # No latest_draw_info for CSV
     except FileNotFoundError:
         print("Aucun jeu de données disponible. Création d'un jeu de données synthétique...")
-        return create_synthetic_dataset() # This will now return (df, source)
+        return create_synthetic_dataset()
 
 def create_synthetic_dataset():
     """
@@ -109,7 +123,7 @@ def create_synthetic_dataset():
     df = pd.DataFrame(data)
     print(f"Jeu de données synthétique créé: {len(df)} tirages")
     
-    return df, "synthetic"
+    return df, "synthetic", None # No latest_draw_info for synthetic
 
 def clean_and_format_data(df):
     """
@@ -401,19 +415,25 @@ def update_euromillions_data():
     """
     print("=== Récupération et amélioration des données Euromillions ===")
     status_message = "Failed to update data." # Default status
+    latest_draw_data = None # Initialize latest_draw_data
     
     # Récupérer les données réelles
-    df, source = fetch_euromillions_data() # Now returns (df, source_type)
-    
+    df, source, latest_draw_data = fetch_euromillions_data() # Now returns (df, source_type, latest_draw_info)
+
     if df is None or df.empty:
-        if source == "API_Error":
-            status_message = "Failed to fetch data from API and no fallback available."
-        elif source == "CSV_Error":
-             status_message = "Failed to load data from CSV and no synthetic fallback."
-        else:
+        # Construct a more informative message based on the source if possible
+        if source == "API":
+             status_message = "API call attempt failed or returned no data, or data cleaning failed."
+        elif source == "CSV":
+             status_message = "CSV load attempt resulted in empty data or failed."
+        elif source == "synthetic":
+             status_message = "Synthetic data generation resulted in empty data or failed."
+        else: # Generic fallback
             status_message = "Data source returned empty or None, and no synthetic data generated."
+
         print(status_message)
-        return status_message
+        # Return the new dict structure even on failure
+        return {'status_message': status_message, 'latest_draw_data': latest_draw_data}
 
     # Afficher un aperçu des données
     print("\nAperçu des données:")
@@ -474,9 +494,17 @@ def update_euromillions_data():
     print(f"Numéro principal le plus fréquent: {most_common_main}")
     print(f"Étoile la plus fréquente: {most_common_star}")
 
-    return status_message
+    return {'status_message': status_message, 'latest_draw_data': latest_draw_data}
 
 if __name__ == "__main__":
-    status = update_euromillions_data()
-    print(f"\nScript execution status: {status}")
+    result = update_euromillions_data() # result is now a dictionary
+    print(f"\nScript execution status: {result['status_message']}")
+    if result['latest_draw_data']:
+        print("\n--- Latest Fetched Draw (from API before enhancement) ---")
+        print(f"Date: {result['latest_draw_data']['Date']}")
+        # Construct numbers and stars list for printing
+        numbers = [result['latest_draw_data'][f'N{i}'] for i in range(1,6)]
+        stars = [result['latest_draw_data'][f'E{i}'] for i in range(1,3)]
+        print(f"Numbers: {numbers}")
+        print(f"Stars: {stars}")
 

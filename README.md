@@ -86,8 +86,45 @@ Le projet a évolué à travers 5 phases majeures :
 
 ### Installation des dépendances :
 ```bash
-pip install pandas numpy scikit-learn tensorflow matplotlib seaborn optuna
+pip install pandas numpy scikit-learn tensorflow matplotlib seaborn optuna requests
 ```
+
+### Interface en Ligne de Commande (CLI)
+Le projet inclut une interface en ligne de commande (CLI) pour faciliter la mise à jour des données et la génération de prédictions. Pour utiliser la CLI, exécutez les commandes depuis la racine du projet comme suit :
+
+`python -m cli.main <commande> [arguments]`
+
+**Commandes disponibles :**
+
+*   **`update-data`**
+    *   **Description :** Met à jour la base de données des tirages Euromillions en récupérant les derniers résultats depuis la source de données en ligne. Les nouveaux tirages sont intégrés dans le fichier `euromillions_enhanced_dataset.csv` utilisé par la plupart des modèles. Si de nouvelles données sont récupérées via l'API, les détails du dernier tirage (date, numéros, étoiles) sont affichés dans le terminal.
+    *   **Exemple :**
+        ```bash
+        python -m cli.main update-data
+        ```
+
+*   **`list-models`**
+    *   **Description :** Affiche la liste des modèles de prédiction configurés et disponibles pour utilisation via la CLI.
+    *   **Exemple :**
+        ```bash
+        python -m cli.main list-models
+        ```
+
+*   **`predict <model_name>`**
+    *   **Description :** Génère une prédiction de numéros et d'étoiles Euromillions en utilisant le modèle spécifié.
+    *   **Argument :** `<model_name>` - Le nom du modèle à utiliser.
+    *   **Modèles disponibles :**
+        *   `final_valide`: Utilise la logique de `predicteur_final_valide.py` (modèle Bayesian Ridge validé scientifiquement).
+        *   `revolutionnaire`: Utilise la logique de `revolutionary_predictor_10_06_2025.py` (combinaison de méthodes innovantes).
+        *   `agrege`: Utilise la logique de `aggregated_final_predictor.py` (agrégation de résultats de multiples systèmes). *Note : Ce modèle peut nécessiter l'existence de fichiers de résultats intermédiaires dans le répertoire `results/` pour fonctionner comme prévu.*
+        *   `tf_lstm`: Utilise le modèle LSTM basé sur TensorFlow de `euromillions_model.py`. *Note : Ce modèle charge des poids pré-entraînés. S'ils ne sont pas disponibles, il utilisera les modèles factices créés pour le développement ou pourrait échouer si ceux-ci sont absents.*
+    *   **Exemples :**
+        ```bash
+        python -m cli.main predict final_valide
+        ```
+        ```bash
+        python -m cli.main predict revolutionnaire
+        ```
 
 ### Exécution du prédicteur principal :
 ```bash
