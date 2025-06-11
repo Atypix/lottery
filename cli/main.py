@@ -112,10 +112,26 @@ def main():
     if args.command == 'update-data':
         print("Attempting to update data...")
         try:
-            status = update_euromillions_data()
-            print(status)
+            update_result = update_euromillions_data() # This now returns a dict
+            print(update_result['status_message'])
+
+            latest_draw = update_result.get('latest_draw_data')
+            if latest_draw:
+                print("\n--- Details of the Latest Fetched Draw ---")
+                print(f"  Date: {latest_draw.get('Date')}")
+                # Ensure keys exist before trying to format, provide default empty list if not
+                numbers_list = [latest_draw.get(f'N{i}') for i in range(1, 6)]
+                stars_list = [latest_draw.get(f'E{i}') for i in range(1, 3)]
+                # Filter out None values if any key was missing, though latest_draw_data structure should be consistent
+                numbers = [n for n in numbers_list if n is not None]
+                stars = [s for s in stars_list if s is not None]
+                print(f"  Numbers: {numbers}")
+                print(f"  Stars: {stars}")
+
         except Exception as e:
             print(f"An error occurred during data update: {e}")
+            # import traceback # For debugging
+            # traceback.print_exc()
 
     elif args.command == 'list-models':
         print("Available prediction models:")
