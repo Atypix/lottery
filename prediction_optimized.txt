@@ -1,0 +1,6 @@
+Prédiction optimisée pour le prochain tirage de l'Euromillions (générée le 2025-06-07 02:45):
+Numéros principaux: 14, 20, 26, 32, 39
+Étoiles: 3, 10
+
+Modèles utilisés: LSTM avancé + Random Forest + XGBoost (ensemble learning)
+Données: 1848 tirages réels avec 55 caractéristiques

@@ -1,0 +1,21 @@
+Prédiction finale optimisée pour le prochain tirage de l'Euromillions
+Générée le 2025-06-07 02:51
+============================================================
+
+Numéros principaux: 12, 20, 26, 33, 40
+Étoiles: 4, 9
+
+Modèles utilisés:
+- LSTM optimisé avec BatchNormalization et Dropout
+- Random Forest avec hyperparamètres optimisés
+- XGBoost avec hyperparamètres optimisés
+- Ensemble learning avec poids optimisés
+
+Données: 1848 tirages réels avec caractéristiques avancées
+Période: 2004-02-13 00:00:00 à 2025-06-06 00:00:00
+
+Métriques d'évaluation:
+- Numéros principaux MSE: 0.0154
+- Numéros principaux MAE: 0.1009
+- Étoiles MSE: 0.0351
+- Étoiles MAE: 0.1596

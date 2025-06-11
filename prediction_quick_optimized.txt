@@ -1,0 +1,20 @@
+Prédiction Euromillions Optimisée Rapide
+Générée le 2025-06-07 02:53
+============================================================
+
+Numéros principaux: 18, 22, 28, 32, 38
+Étoiles: 3, 10
+
+Modèles utilisés:
+- Random Forest optimisé (60% de poids)
+- XGBoost optimisé (40% de poids)
+- Ensemble learning avec données réelles
+
+Données: 1848 tirages réels avec caractéristiques avancées
+Période: 2004-02-13 00:00:00 à 2025-06-06 00:00:00
+
+Analyse de confiance:
+- Somme des numéros principaux: 138
+- Percentile de la somme: 63.2%
+- Fréquence moyenne des numéros principaux: 0.018
+- Fréquence moyenne des étoiles: 0.084

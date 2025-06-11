@@ -1,0 +1,21 @@
+{
+  "numbers": [
+    20,
+    29,
+    30,
+    35,
+    40
+  ],
+  "stars": [
+    2,
+    12
+  ],
+  "confidence_score": 10.0,
+  "exact_matches_validated": 6,
+  "total_possible_matches": 7,
+  "precision_rate": 85.7,
+  "method": "Innovations R\u00e9volutionnaires Phase 3",
+  "optimization_score": 1345.0,
+  "refinement_score": 10490.0,
+  "generation_date": "2025-06-08T06:24:09.803601"
+}
