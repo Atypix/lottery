@@ -54,7 +54,7 @@ class AggregatedFinalPredictor:
         
     def setup_aggregation_environment(self):
         """Configure l'environnement d'agrégation."""
-        self.aggregation_dir = '/home/ubuntu/results/final_aggregation'
+        self.aggregation_dir = 'results/final_aggregation'
         os.makedirs(self.aggregation_dir, exist_ok=True)
         os.makedirs(f'{self.aggregation_dir}/analysis', exist_ok=True)
         os.makedirs(f'{self.aggregation_dir}/visualizations', exist_ok=True)
@@ -66,7 +66,7 @@ class AggregatedFinalPredictor:
         print("📚 Chargement des enseignements synthétisés...")
         
         # Chargement de la synthèse complète
-        synthesis_file = '/home/ubuntu/results/learnings_synthesis/comprehensive_synthesis.json'
+        synthesis_file = 'results/learnings_synthesis/comprehensive_synthesis.json'
         
         try:
             with open(synthesis_file, 'r') as f:
@@ -78,7 +78,7 @@ class AggregatedFinalPredictor:
         
         # Chargement des résultats de tests
         self.test_results = []
-        results_dir = '/home/ubuntu/results/comparative_testing/individual_results'
+        results_dir = 'results/comparative_testing/individual_results'
         
         if os.path.exists(results_dir):
             for file_path in glob.glob(f'{results_dir}/*.json'):
@@ -97,7 +97,7 @@ class AggregatedFinalPredictor:
     def load_historical_data(self):
         """Charge les données historiques Euromillions."""
         
-        data_file = '/home/ubuntu/euromillions_enhanced_dataset.csv'
+        data_file = 'euromillions_enhanced_dataset.csv'
         
         try:
             self.historical_data = pd.read_csv(data_file)
@@ -859,16 +859,27 @@ Rapport généré automatiquement par le Générateur de Tirage Final Agrégé
 if __name__ == "__main__":
     # Lancement de l'agrégation finale
     aggregator = AggregatedFinalPredictor()
-    results = aggregator.run_final_aggregation()
+    results = aggregator.run_final_aggregation() # This is the comprehensive dict
     
-    prediction = results['prediction']
-    metrics = results['metrics']
+    # Extract standardized prediction
+    prediction_numbers = results.get('prediction', {}).get('numbers', [])
+    prediction_stars = results.get('prediction', {}).get('stars', [])
+    prediction_confidence = results.get('metrics', {}).get('confidence_percentage', 0.0)
     
-    print(f"\n🎯 PRÉDICTION FINALE AGRÉGÉE:")
-    print(f"Numéros: {' - '.join(map(str, prediction['numbers']))}")
-    print(f"Étoiles: {' - '.join(map(str, prediction['stars']))}")
-    print(f"Confiance: {metrics['confidence_percentage']:.1f}%")
-    print(f"Validation: {metrics['validation_matches']['total_matches']}/7 correspondances")
+    standardized_output = {
+        'numbers': prediction_numbers,
+        'stars': prediction_stars,
+        'confidence': prediction_confidence,
+        'model_name': 'aggregated_final_predictor'
+    }
     
+    print(f"\n🎯 PRÉDICTION FINALE AGRÉGÉE (Standardized Output):")
+    print(f"Numéros: {standardized_output['numbers']}")
+    print(f"Étoiles: {standardized_output['stars']}")
+    print(f"Confiance: {standardized_output['confidence']:.1f}%") # Assuming confidence is percentage
+    print(f"Modèle: {standardized_output['model_name']}")
+
+    # Keep other prints from original if __name__ block if desired
+    # print(f"Validation: {results.get('metrics', {}).get('validation_matches', {}).get('total_matches', 'N/A')}/7 correspondances")
     print("\n🎉 TIRAGE FINAL AGRÉGÉ GÉNÉRÉ! 🎉")
 

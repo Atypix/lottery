@@ -40,7 +40,7 @@ class FinalValidatedPredictor:
     def load_data(self):
         """Charge les données historiques."""
         print("📊 Chargement des données validées...")
-        self.df = pd.read_csv('/home/ubuntu/euromillions_enhanced_dataset.csv')
+        self.df = pd.read_csv('euromillions_enhanced_dataset.csv')
         print(f"✅ {len(self.df)} tirages historiques chargés")
         
     def setup_validated_model(self):
@@ -229,7 +229,7 @@ class FinalValidatedPredictor:
         print("💾 Sauvegarde de la prédiction finale...")
         
         # Sauvegarde JSON
-        with open('/home/ubuntu/prediction_finale_validee.json', 'w') as f:
+        with open('prediction_finale_validee.json', 'w') as f:
             json.dump(prediction, f, indent=2, default=str)
         
         # Ticket final
@@ -283,7 +283,7 @@ class FinalValidatedPredictor:
 🌟 PRÉDICTION FINALE AVEC GARANTIE SCIENTIFIQUE ! 🌟
 """
         
-        with open('/home/ubuntu/ticket_final_valide.txt', 'w') as f:
+        with open('ticket_final_valide.txt', 'w') as f:
             f.write(ticket)
         
         print("✅ Prédiction finale sauvegardée!")
@@ -305,20 +305,23 @@ class FinalValidatedPredictor:
         print("💾 Phase 3: Sauvegarde...")
         self.save_prediction(prediction)
         
+        # Add model_name to the prediction dict
+        prediction['model_name'] = 'predicteur_final_valide'
         print("✅ PRÉDICTION FINALE VALIDÉE GÉNÉRÉE!")
         return prediction
 
 if __name__ == "__main__":
     # Génération de la prédiction finale validée
     predictor = FinalValidatedPredictor()
-    prediction = predictor.run_final_prediction()
+    prediction_output = predictor.run_final_prediction() # Capture the returned dict
     
-    print(f"\n🏆 PRÉDICTION FINALE SCIENTIFIQUEMENT VALIDÉE:")
-    print(f"Numéros: {', '.join(map(str, prediction['numbers']))}")
-    print(f"Étoiles: {', '.join(map(str, prediction['stars']))}")
-    print(f"Confiance: {prediction['confidence_score']:.2f}/10")
-    print(f"Modèle: {prediction['model_used']}")
-    print(f"Statut: {prediction['validation_status']}")
+    print(f"\n🏆 PRÉDICTION FINALE SCIENTIFIQUEMENT VALIDÉE (from run_final_prediction):")
+    print(f"Numéros: {prediction_output['numbers']}")
+    print(f"Étoiles: {prediction_output['stars']}")
+    print(f"Confiance: {prediction_output.get('confidence_score', 'N/A')}") # Use .get for safety
+    print(f"Modèle: {prediction_output.get('model_name', 'N/A')}")
+    # Keep other prints if desired, for example, the status:
+    print(f"Statut: {prediction_output.get('validation_status', 'N/A')}")
     
     print("\n🌟 PRÉDICTION FINALE AVEC VALIDATION SCIENTIFIQUE COMPLÈTE! 🌟")
 

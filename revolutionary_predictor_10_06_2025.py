@@ -41,7 +41,7 @@ class RevolutionaryPredictor:
         print("📊 Chargement des données fraîches...")
         
         # Utilisation du dataset le plus complet
-        self.df = pd.read_csv('/home/ubuntu/euromillions_enhanced_dataset.csv')
+        self.df = pd.read_csv('euromillions_enhanced_dataset.csv')
         print(f"✅ {len(self.df)} tirages historiques chargés (données fraîches)")
         
         # Conversion des dates
@@ -499,7 +499,11 @@ class RevolutionaryPredictor:
             'revolutionary_score': 100.0
         }
         
-        with open('/home/ubuntu/prediction_revolutionnaire_10_06_2025.json', 'w') as f:
+        # Add model_name to the final_prediction dict that will be returned
+        final_prediction['model_name'] = 'revolutionary_predictor_10_06_2025'
+
+        # Save the more comprehensive 'result' dictionary to JSON
+        with open('prediction_revolutionnaire_10_06_2025.json', 'w') as f:
             json.dump(result, f, indent=2)
         
         # Ticket révolutionnaire
@@ -530,7 +534,7 @@ class RevolutionaryPredictor:
 🔥 RÉVOLUTION TOTALE ! 🔥
 """
         
-        with open('/home/ubuntu/ticket_revolutionnaire_10_06_2025.txt', 'w') as f:
+        with open('ticket_revolutionnaire_10_06_2025.txt', 'w') as f:
             f.write(ticket)
         
         print(f"\n💾 Prédiction révolutionnaire sauvegardée !")
@@ -560,5 +564,12 @@ def main():
     return final_prediction
 
 if __name__ == "__main__":
-    result = main()
+    prediction_output = main() # main() returns the final_prediction dict
+
+    print(f"\n🏆 PRÉDICTION RÉVOLUTIONNAIRE (from generate_revolutionary_prediction):")
+    print(f"Numéros: {prediction_output['numbers']}")
+    print(f"Étoiles: {prediction_output['stars']}")
+    # Confidence is a percentage like 0.85, display as is or format if needed
+    print(f"Confiance: {prediction_output.get('confidence')}")
+    print(f"Modèle: {prediction_output.get('model_name', 'N/A')}")
 
