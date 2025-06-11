@@ -134,6 +134,13 @@ Le projet inclut une interface en ligne de commande (CLI) pour faciliter la mise
         python -m cli.main predict revolutionnaire
         ```
 
+*   **`predict-consensus`**
+    *   **Description :** Génère une méta-prédiction en exécutant tous les modèles de prédiction disponibles (`final_valide`, `revolutionnaire`, `agrege`, `tf_lstm`), puis en agrégeant leurs résultats. La prédiction finale est basée sur les 5 numéros et les 2 étoiles qui apparaissent le plus fréquemment parmi toutes les prédictions individuelles. Cette commande cible le prochain tirage Euromillions officiel à venir.
+    *   **Exemple :**
+        ```bash
+        python -m cli.main predict-consensus
+        ```
+
 ### Exécution du prédicteur principal :
 ```bash
 python predicteur_final_valide.py
