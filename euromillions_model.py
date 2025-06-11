@@ -373,6 +373,7 @@ def main():
     
     print("\nLa prédiction a été sauvegardée dans le fichier 'prediction.txt'.")
 
+from common.date_utils import get_next_euromillions_draw_date # Added for tf_lstm
 # --- Start of refactored functions ---
 
 def load_trained_models(model_base_name="euromillions_model_tf"):
@@ -401,7 +402,7 @@ def predict_with_tensorflow_model():
     if main_model is None or stars_model is None:
         return {
             'numbers': [], 'stars': [], 'confidence': None,
-            'model_name': 'euromillions_model_tf', 'status': 'failure',
+            'model_name': 'tf_lstm', 'status': 'failure', # Align model_name
             'message': 'Models not found. Please train them first or ensure dummy models exist.'
         }
 
@@ -410,7 +411,7 @@ def predict_with_tensorflow_model():
     except FileNotFoundError:
         return {
             'numbers': [], 'stars': [], 'confidence': None,
-            'model_name': 'euromillions_model_tf', 'status': 'failure',
+            'model_name': 'tf_lstm', 'status': 'failure', # Align model_name
             'message': 'euromillions_dataset.csv not found.'
         }
 
@@ -429,7 +430,7 @@ def predict_with_tensorflow_model():
     if len(main_normalized_full) < SEQUENCE_LENGTH or len(stars_normalized_full) < SEQUENCE_LENGTH:
         return {
             'numbers': [], 'stars': [], 'confidence': None,
-            'model_name': 'euromillions_model_tf', 'status': 'failure',
+            'model_name': 'tf_lstm', 'status': 'failure', # Align model_name
             'message': f'Not enough data to form a sequence (need {SEQUENCE_LENGTH}, got {len(main_normalized_full)}).'
         }
 
@@ -465,13 +466,18 @@ def predict_with_tensorflow_model():
         unique_stars = sorted(list(set(unique_stars))) # ensure sorted after append
     final_stars = unique_stars[:2]
 
+
+    next_draw_date_obj = get_next_euromillions_draw_date("euromillions_dataset.csv")
+    target_date_str = next_draw_date_obj.strftime('%Y-%m-%d') # Or '%d/%m/%Y' for consistency with others
+
     return {
         'numbers': final_main_numbers, # Already a list
         'stars': final_stars,         # Already a list
         'confidence': None, # Confidence not typically provided by basic LSTMs
-        'model_name': 'euromillions_model_tf',
+        'model_name': 'tf_lstm', # Align with CLI key
         'status': 'success',
-        'message': 'Prediction generated successfully.'
+        'message': 'Prediction generated successfully.',
+        'target_draw_date': target_date_str
     }
 
 # Renaming original main function

@@ -14,10 +14,11 @@ Date: Juin 2025
 import pandas as pd
 import numpy as np
 import json
-from datetime import datetime
+from datetime import datetime, date # Added date
 import warnings
 warnings.filterwarnings('ignore')
 
+from common.date_utils import get_next_euromillions_draw_date # Added
 from sklearn.linear_model import BayesianRidge
 from sklearn.preprocessing import StandardScaler
 
@@ -29,6 +30,10 @@ class FinalValidatedPredictor:
     def __init__(self):
         print("🏆 PRÉDICTEUR FINAL - CORRESPONDANCES PARFAITES VALIDÉES 🏆")
         print("=" * 65)
+
+        self.actual_next_draw_date = get_next_euromillions_draw_date("euromillions_enhanced_dataset.csv")
+        print(f"🔮 Prédiction pour le tirage du: {self.actual_next_draw_date.strftime('%d/%m/%Y')} (dynamically determined)")
+
         print("Méthodologie: Optimisation ciblée scientifiquement validée")
         print("Performance: 100% de correspondances (7/7) avec tirage réel")
         print("Validation: Scientifique rigoureuse (Probabilité: 1/139,838,160)")
@@ -157,18 +162,19 @@ class FinalValidatedPredictor:
             'numbers': predicted_numbers,
             'stars': predicted_stars,
             'confidence_score': confidence_score,
-            'model_used': 'bayesian_ridge_validated',
+            'model_used': 'bayesian_ridge_validated', # This is distinct from 'model_name' for CLI
             'prediction_score': prediction_score,
             'methodology': 'scientifically_validated_targeted_optimization',
             'validation_status': 'SCIENTIFICALLY_VALIDATED',
             'reference_performance': {
                 'historical_accuracy': '100% (7/7 correspondances)',
-                'validation_date': '2025-06-06',
+                'validation_date': '2025-06-06', # This is the historical validation
                 'probability': '1 sur 139,838,160',
                 'robustness_score': 0.661,
                 'quality_score': 0.970
             },
-            'timestamp': datetime.now().isoformat()
+            'timestamp': datetime.now().isoformat(),
+            'target_draw_date': self.actual_next_draw_date.strftime('%Y-%m-%d')
         }
         
         return prediction_result
@@ -228,8 +234,12 @@ class FinalValidatedPredictor:
         """Sauvegarde la prédiction finale."""
         print("💾 Sauvegarde de la prédiction finale...")
         
+        date_str_for_filename = datetime.strptime(prediction['target_draw_date'], '%Y-%m-%d').strftime('%Y-%m-%d')
+        json_filename = f"prediction_final_valide_{date_str_for_filename}.json"
+        ticket_filename = f"ticket_final_valide_{date_str_for_filename}.txt"
+
         # Sauvegarde JSON
-        with open('prediction_finale_validee.json', 'w') as f:
+        with open(json_filename, 'w') as f:
             json.dump(prediction, f, indent=2, default=str)
         
         # Ticket final
@@ -237,6 +247,8 @@ class FinalValidatedPredictor:
 ╔══════════════════════════════════════════════════════════╗
 ║        🏆 PRÉDICTION FINALE SCIENTIFIQUEMENT VALIDÉE 🏆 ║
 ║              CORRESPONDANCES PARFAITES PROUVÉES         ║
+╠══════════════════════════════════════════════════════════╣
+║  🔮 PRÉDICTION POUR LE TIRAGE DU: {self.actual_next_draw_date.strftime('%d/%m/%Y')}         ║
 ╠══════════════════════════════════════════════════════════╣
 ║                                                          ║
 ║  🎯 NUMÉROS FINAUX VALIDÉS:                              ║
@@ -283,10 +295,10 @@ class FinalValidatedPredictor:
 🌟 PRÉDICTION FINALE AVEC GARANTIE SCIENTIFIQUE ! 🌟
 """
         
-        with open('ticket_final_valide.txt', 'w') as f:
+        with open(ticket_filename, 'w') as f:
             f.write(ticket)
         
-        print("✅ Prédiction finale sauvegardée!")
+        print(f"✅ Prédiction finale sauvegardée ({json_filename}, {ticket_filename})")
         
     def run_final_prediction(self):
         """Exécute la prédiction finale complète."""
@@ -306,7 +318,7 @@ class FinalValidatedPredictor:
         self.save_prediction(prediction)
         
         # Add model_name to the prediction dict
-        prediction['model_name'] = 'predicteur_final_valide'
+        prediction['model_name'] = 'final_valide' # Align with CLI key
         print("✅ PRÉDICTION FINALE VALIDÉE GÉNÉRÉE!")
         return prediction
 
@@ -315,12 +327,11 @@ if __name__ == "__main__":
     predictor = FinalValidatedPredictor()
     prediction_output = predictor.run_final_prediction() # Capture the returned dict
     
-    print(f"\n🏆 PRÉDICTION FINALE SCIENTIFIQUEMENT VALIDÉE (from run_final_prediction):")
-    print(f"Numéros: {prediction_output['numbers']}")
-    print(f"Étoiles: {prediction_output['stars']}")
-    print(f"Confiance: {prediction_output.get('confidence_score', 'N/A')}") # Use .get for safety
+    print(f"\n🏆 PRÉDICTION FINALE SCIENTIFIQUEMENT VALIDÉE (pour le {prediction_output.get('target_draw_date', 'N/A')}):")
+    print(f"Numéros: {prediction_output.get('numbers', [])}") # Use .get for safety
+    print(f"Étoiles: {prediction_output.get('stars', [])}")
+    print(f"Confiance: {prediction_output.get('confidence_score', 'N/A')}")
     print(f"Modèle: {prediction_output.get('model_name', 'N/A')}")
-    # Keep other prints if desired, for example, the status:
     print(f"Statut: {prediction_output.get('validation_status', 'N/A')}")
     
     print("\n🌟 PRÉDICTION FINALE AVEC VALIDATION SCIENTIFIQUE COMPLÈTE! 🌟")
