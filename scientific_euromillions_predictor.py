@@ -53,11 +53,11 @@ class ScientificEuromillionsPredictor:
         print("🔧 Configuration de l'environnement scientifique...")
         
         # Création des dossiers de résultats
-        os.makedirs('/home/ubuntu/results/scientific', exist_ok=True)
-        os.makedirs('/home/ubuntu/results/scientific/analysis', exist_ok=True)
-        os.makedirs('/home/ubuntu/results/scientific/models', exist_ok=True)
-        os.makedirs('/home/ubuntu/results/scientific/validation', exist_ok=True)
-        os.makedirs('/home/ubuntu/results/scientific/visualizations', exist_ok=True)
+        os.makedirs('results/scientific', exist_ok=True)
+        os.makedirs('results/scientific/analysis', exist_ok=True)
+        os.makedirs('results/scientific/models', exist_ok=True)
+        os.makedirs('results/scientific/validation', exist_ok=True)
+        os.makedirs('results/scientific/visualizations', exist_ok=True)
         
         # Configuration matplotlib pour les graphiques scientifiques
         plt.style.use('seaborn-v0_8')
@@ -81,8 +81,21 @@ class ScientificEuromillionsPredictor:
         print("📊 Chargement et validation des données...")
         
         try:
-            self.df = pd.read_csv('/home/ubuntu/euromillions_enhanced_dataset.csv')
-            print(f"✅ Données chargées: {len(self.df)} tirages")
+            data_path_primary = 'data/euromillions_enhanced_dataset.csv'
+            data_path_fallback = 'euromillions_enhanced_dataset.csv'
+            if os.path.exists(data_path_primary):
+                self.df = pd.read_csv(data_path_primary)
+                print(f"✅ Données chargées depuis {data_path_primary}: {len(self.df)} tirages")
+            elif os.path.exists(data_path_fallback):
+                self.df = pd.read_csv(data_path_fallback)
+                print(f"✅ Données chargées depuis {data_path_fallback} (répertoire courant): {len(self.df)} tirages")
+            else:
+                print(f"❌ ERREUR: Fichier de données non trouvé ({data_path_primary} ou {data_path_fallback})")
+                self.df = pd.DataFrame() # Or sys.exit(1)
+                # For now, let it proceed and potentially fail later if df is critical and empty
+                if self.df.empty: # if still empty after trying fallbacks
+                     raise FileNotFoundError("Dataset not found, cannot proceed.")
+
         except Exception as e:
             print(f"❌ Erreur de chargement: {e}")
             return
@@ -766,7 +779,7 @@ class ScientificEuromillionsPredictor:
         plt.grid(True, alpha=0.3)
         
         plt.tight_layout()
-        plt.savefig('/home/ubuntu/results/scientific/visualizations/statistical_analysis.png', 
+        plt.savefig('results/scientific/visualizations/statistical_analysis.png',
                    dpi=300, bbox_inches='tight')
         plt.close()
         
@@ -800,11 +813,11 @@ class ScientificEuromillionsPredictor:
         """Sauvegarde les résultats scientifiques."""
         
         # Sauvegarde JSON
-        with open('/home/ubuntu/results/scientific/analysis/statistical_analysis.json', 'w') as f:
+        with open('results/scientific/analysis/statistical_analysis.json', 'w') as f:
             json.dump(analysis_results, f, indent=2, default=str)
         
         # Sauvegarde du rapport de validation des données
-        with open('/home/ubuntu/results/scientific/analysis/data_validation.json', 'w') as f:
+        with open('results/scientific/analysis/data_validation.json', 'w') as f:
             json.dump(self.data_validation_report, f, indent=2, default=str)
         
         print("✅ Résultats scientifiques sauvegardés!")
@@ -947,7 +960,7 @@ Rapport généré par le Système d'Analyse Scientifique Euromillions
 ================================================================
 """
 
-        with open('/home/ubuntu/results/scientific/analysis/scientific_report.txt', 'w') as f:
+        with open('results/scientific/analysis/scientific_report.txt', 'w') as f:
             f.write(report)
         
         print("✅ Rapport scientifique généré!")
@@ -958,5 +971,5 @@ if __name__ == "__main__":
     results = predictor.run_scientific_analysis()
     
     print("\n🎉 ANALYSE SCIENTIFIQUE TERMINÉE! 🎉")
-    print("📊 Résultats disponibles dans /home/ubuntu/results/scientific/")
+    print("📊 Résultats disponibles dans results/scientific/")
 

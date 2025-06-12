@@ -603,7 +603,7 @@ class SwarmIntelligencePredictor:
     Prédicteur révolutionnaire basé sur l'intelligence collective d'essaims.
     """
     
-    def __init__(self, data_path: str = "euromillions_enhanced_dataset.csv"):
+    def __init__(self, data_path: str = "data/euromillions_enhanced_dataset.csv"):
         """
         Initialise le prédicteur d'intelligence collective.
         """
@@ -611,11 +611,16 @@ class SwarmIntelligencePredictor:
         print("=" * 70)
         
         # Chargement des données
-        if os.path.exists(data_path):
-            self.df = pd.read_csv(data_path)
-            print(f"✅ Données chargées: {len(self.df)} tirages")
+        data_path_primary = data_path
+        data_path_fallback = "euromillions_enhanced_dataset.csv"
+        if os.path.exists(data_path_primary):
+            self.df = pd.read_csv(data_path_primary)
+            print(f"✅ Données chargées depuis {data_path_primary}: {len(self.df)} tirages")
+        elif os.path.exists(data_path_fallback):
+            self.df = pd.read_csv(data_path_fallback)
+            print(f"✅ Données chargées depuis {data_path_fallback} (répertoire courant): {len(self.df)} tirages")
         else:
-            print("❌ Fichier non trouvé, utilisation de données de base...")
+            print(f"❌ Fichier de données non trouvé ({data_path_primary} ou {data_path_fallback}), utilisation de données de base...")
             self.load_basic_data()
         
         # Préparation des données historiques
@@ -632,9 +637,16 @@ class SwarmIntelligencePredictor:
         """
         Charge des données de base si le fichier enrichi n'existe pas.
         """
-        if os.path.exists("euromillions_dataset.csv"):
-            self.df = pd.read_csv("euromillions_dataset.csv")
+        data_path_primary_basic = "data/euromillions_dataset.csv"
+        data_path_fallback_basic = "euromillions_dataset.csv"
+        if os.path.exists(data_path_primary_basic):
+            self.df = pd.read_csv(data_path_primary_basic)
+            print(f"✅ Données de base chargées depuis {data_path_primary_basic}")
+        elif os.path.exists(data_path_fallback_basic):
+            self.df = pd.read_csv(data_path_fallback_basic)
+            print(f"✅ Données de base chargées depuis {data_path_fallback_basic} (répertoire courant)")
         else:
+            print(f"❌ Fichier de données de base non trouvé ({data_path_primary_basic} ou {data_path_fallback_basic}). Création de données synthétiques...")
             # Création de données synthétiques
             dates = pd.date_range(start='2020-01-01', end='2025-06-01', freq='3D')
             data = []

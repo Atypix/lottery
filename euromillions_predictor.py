@@ -32,7 +32,9 @@ class EuromillionsPredictor:
         """
         self.models_dir = "models/advanced"
         self.results_dir = "results/advanced"
-        self.data_path = "euromillions_enhanced_dataset.csv"
+        # Updated data_path to prefer data/ subdirectory
+        self.data_path_primary = "data/euromillions_enhanced_dataset.csv"
+        self.data_path_fallback = "euromillions_enhanced_dataset.csv"
         
         # Création des répertoires si nécessaires
         os.makedirs(self.models_dir, exist_ok=True)
@@ -81,9 +83,16 @@ class EuromillionsPredictor:
         """
         print("Génération d'une prédiction rapide...")
         
-        # Vérification de l'existence du fichier de données
-        if not os.path.exists(self.data_path):
-            print(f"❌ Fichier de données {self.data_path} non trouvé.")
+        # Determine actual data path to use
+        actual_data_file_to_use = None
+        if os.path.exists(self.data_path_primary):
+            actual_data_file_to_use = self.data_path_primary
+        elif os.path.exists(self.data_path_fallback):
+            actual_data_file_to_use = self.data_path_fallback
+            print(f"ℹ️  Fichier de données trouvé dans le répertoire courant: {self.data_path_fallback}")
+
+        if not actual_data_file_to_use:
+            print(f"❌ Fichier de données non trouvé ({self.data_path_primary} ou {self.data_path_fallback}).")
             print("⚠️ Génération d'une prédiction aléatoire.")
             
             # Génération de numéros aléatoires
@@ -102,10 +111,10 @@ class EuromillionsPredictor:
         
         # Chargement des données
         try:
-            df = pd.read_csv(self.data_path)
-            print(f"✅ Données chargées avec succès : {len(df)} tirages.")
+            df = pd.read_csv(actual_data_file_to_use)
+            print(f"✅ Données chargées avec succès depuis {actual_data_file_to_use}: {len(df)} tirages.")
         except Exception as e:
-            print(f"❌ Erreur lors du chargement des données : {e}")
+            print(f"❌ Erreur lors du chargement des données depuis {actual_data_file_to_use}: {e}")
             return None
         
         # Analyse statistique simple

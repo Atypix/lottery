@@ -65,17 +65,29 @@ class FastTargetedPredictor:
         
     def setup_environment(self):
         """Configure l'environnement."""
-        os.makedirs('/home/ubuntu/results/fast_targeted', exist_ok=True)
+        os.makedirs('results/fast_targeted', exist_ok=True)
         
     def load_data(self):
         """Charge les données et analyses."""
         print("📊 Chargement des données...")
         
-        self.df = pd.read_csv('/home/ubuntu/euromillions_enhanced_dataset.csv')
-        
+        data_path_primary = 'data/euromillions_enhanced_dataset.csv'
+        data_path_fallback = 'euromillions_enhanced_dataset.csv'
+        if os.path.exists(data_path_primary):
+            self.df = pd.read_csv(data_path_primary)
+            print(f"✅ Données chargées depuis {data_path_primary}")
+        elif os.path.exists(data_path_fallback):
+            self.df = pd.read_csv(data_path_fallback)
+            print(f"✅ Données chargées depuis {data_path_fallback} (répertoire courant)")
+        else:
+            print(f"❌ ERREUR: Fichier de données non trouvé ({data_path_primary} ou {data_path_fallback})")
+            # Fallback to empty dataframe or raise error, depending on desired behavior
+            self.df = pd.DataFrame() # Or sys.exit(1)
+            # For now, let it proceed and potentially fail later if df is critical
+
         # Chargement de l'analyse rétroactive
         try:
-            with open('/home/ubuntu/results/targeted_analysis/retroactive_analysis.json', 'r') as f:
+            with open('results/targeted_analysis/retroactive_analysis.json', 'r') as f:
                 self.analysis_results = json.load(f)
         except:
             print("⚠️ Analyse rétroactive non trouvée, utilisation de valeurs par défaut")
@@ -447,7 +459,7 @@ class FastTargetedPredictor:
         print("💾 Sauvegarde des résultats...")
         
         # Résultats JSON
-        with open('/home/ubuntu/results/fast_targeted/fast_prediction.json', 'w') as f:
+        with open('results/fast_targeted/fast_prediction.json', 'w') as f:
             json.dump(prediction, f, indent=2, default=str)
         
         # Ticket optimisé
@@ -499,7 +511,7 @@ class FastTargetedPredictor:
 🚀 PRÉDICTION ULTRA-CIBLÉE POUR GAINS MAXIMAUX ! 🚀
 """
         
-        with open('/home/ubuntu/results/fast_targeted/ticket_ultra_cible.txt', 'w') as f:
+        with open('results/fast_targeted/ticket_ultra_cible.txt', 'w') as f:
             f.write(ticket)
         
         print("✅ Résultats sauvegardés!")

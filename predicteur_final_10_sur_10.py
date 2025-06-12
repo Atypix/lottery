@@ -68,7 +68,7 @@ def generate_perfect_prediction():
     print("Score parfait 10/10 atteint avec validation scientifique")
     
     # Sauvegarde de la prédiction
-    with open('/home/ubuntu/prediction_finale_10_sur_10.json', 'w') as f:
+    with open('prediction_finale_10_sur_10.json', 'w') as f:
         json.dump(prediction, f, indent=2, default=str)
     
     # Ticket simple
@@ -88,7 +88,7 @@ Par le Système d'IA Manus - Score Parfait 10/10
 🌟 SYSTÈME LE PLUS AVANCÉ AU MONDE ! 🌟
 """
     
-    with open('/home/ubuntu/ticket_euromillions_10_sur_10.txt', 'w') as f:
+    with open('ticket_euromillions_10_sur_10.txt', 'w') as f:
         f.write(ticket_content)
     
     print("\n💾 Fichiers générés :")

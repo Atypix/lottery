@@ -22,11 +22,12 @@ class EuromillionsUltraOptimized:
     Classe pour l'optimisation ultra-avancée de la prédiction des numéros de l'Euromillions.
     """
     
-    def __init__(self, data_path="euromillions_enhanced_dataset.csv"):
+    def __init__(self, data_path="data/euromillions_enhanced_dataset.csv"): # Added data/ prefix
         """
         Initialise la classe avec le chemin vers les données enrichies.
         """
-        self.data_path = data_path
+        self.data_path_primary = data_path # Default is data/euromillions_enhanced_dataset.csv
+        self.data_path_fallback = "euromillions_enhanced_dataset.csv" # Fallback to root
         self.df = None
         self.X_train = None
         self.X_val = None
@@ -50,12 +51,19 @@ class EuromillionsUltraOptimized:
         self.patience = 20  # Pour l'early stopping
         
         # Vérification de la disponibilité des données
-        if not os.path.exists(self.data_path):
-            print(f"❌ Fichier de données {self.data_path} non trouvé.")
-            print("⚠️ Création d'un jeu de données synthétique pour le développement des modèles.")
-            self.create_synthetic_dataset()
+        self.actual_data_path_to_use = None
+        if os.path.exists(self.data_path_primary):
+            self.actual_data_path_to_use = self.data_path_primary
+            print(f"✅ Fichier de données trouvé: {self.actual_data_path_to_use}")
+        elif os.path.exists(self.data_path_fallback):
+            self.actual_data_path_to_use = self.data_path_fallback
+            print(f"✅ Fichier de données trouvé (fallback): {self.actual_data_path_to_use}")
         else:
-            print(f"✅ Fichier de données {self.data_path} trouvé.")
+            print(f"❌ Fichier de données {self.data_path_primary} (ou {self.data_path_fallback}) non trouvé.")
+            print("⚠️ Création d'un jeu de données synthétique pour le développement des modèles.")
+            self.create_synthetic_dataset() # This will set self.actual_data_path_to_use
+            # If create_synthetic_dataset fails or doesn't set it, load_data will handle it.
+
     
     def create_synthetic_dataset(self):
         """
@@ -130,10 +138,13 @@ class EuromillionsUltraOptimized:
         """
         Charge les données enrichies.
         """
-        print(f"Chargement des données depuis {self.data_path}...")
+        print(f"Chargement des données depuis {self.actual_data_path_to_use}...")
         
         try:
-            self.df = pd.read_csv(self.data_path)
+            # Ensure actual_data_path_to_use is set, create_synthetic_dataset should set it
+            if not self.actual_data_path_to_use: # Should not happen if logic is correct
+                 raise FileNotFoundError("Data path not determined before loading.")
+            self.df = pd.read_csv(self.actual_data_path_to_use)
             
             # Conversion de la colonne date en datetime
             if 'date' in self.df.columns:
@@ -779,18 +790,23 @@ class EuromillionsUltraOptimized:
 # Exécution du pipeline
 if __name__ == "__main__":
     # Vérification de l'existence du fichier de données enrichies
-    if os.path.exists("euromillions_enhanced_dataset.csv"):
-        # Mode complet
-        print("Exécution du pipeline complet d'optimisation ultra-avancée...")
-        
-        # Optimisation ultra-avancée
-        ultra = EuromillionsUltraOptimized()
-        ultra.run_full_pipeline(quick_mode=False)
+    path_to_check_primary = "data/euromillions_enhanced_dataset.csv"
+    path_to_check_fallback = "euromillions_enhanced_dataset.csv"
+
+    run_mode_quick = True # Default to quick mode
+
+    if os.path.exists(path_to_check_primary):
+        print(f"Exécution du pipeline complet d'optimisation ultra-avancée avec {path_to_check_primary}...")
+        ultra = EuromillionsUltraOptimized(data_path=path_to_check_primary)
+        run_mode_quick = False
+    elif os.path.exists(path_to_check_fallback):
+        print(f"Exécution du pipeline complet d'optimisation ultra-avancée avec {path_to_check_fallback} (fallback)...")
+        ultra = EuromillionsUltraOptimized(data_path=path_to_check_fallback)
+        run_mode_quick = False
     else:
         # Mode rapide avec données synthétiques
-        print("⚠️ Fichier de données enrichies non trouvé. Exécution en mode rapide avec données synthétiques.")
-        
-        # Optimisation ultra-avancée
-        ultra = EuromillionsUltraOptimized()
-        ultra.run_full_pipeline(quick_mode=True)
+        print(f"⚠️ Fichier de données enrichies non trouvé ({path_to_check_primary} ou {path_to_check_fallback}). Exécution en mode rapide avec données synthétiques.")
+        ultra = EuromillionsUltraOptimized() # Will use its default and potentially create synthetic
+
+    ultra.run_full_pipeline(quick_mode=run_mode_quick)
 
