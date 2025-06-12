@@ -236,7 +236,7 @@ def main():
     # predict command
     predict_help = "Predict lottery numbers.\nAvailable models:\n" + "\n".join([f"  - {name}" for name in AVAILABLE_MODELS.keys()])
     parser_predict = subparsers.add_parser('predict', help=predict_help, formatter_class=argparse.RawTextHelpFormatter)
-    parser_predict.add_argument('model_name', choices=AVAILABLE_MODELS.keys(), metavar='model_name', help='Name of the prediction model to use')
+    parser_predict.add_argument('model_name', choices=list(AVAILABLE_MODELS.keys()), metavar='model_name', help='Name of the prediction model to use')
 
     # predict-consensus command
     parser_consensus = subparsers.add_parser(
