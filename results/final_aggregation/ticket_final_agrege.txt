@@ -2,10 +2,12 @@
 ╔══════════════════════════════════════════════════════════════════════╗
 ║                    TICKET EUROMILLIONS FINAL AGRÉGÉ                 ║
 ╠══════════════════════════════════════════════════════════════════════╣
+║  🔮 PRÉDICTION POUR LE: 10/06/2025                  ║
+╠══════════════════════════════════════════════════════════════════════╣
 ║                                                                      ║
 ║  🎯 PRÉDICTION BASÉE SUR L'AGRÉGATION DE 36 SYSTÈMES D'IA 🎯       ║
 ║                                                                      ║
-║  📅 Date de génération: 11/06/2025 13:14                        ║
+║  📅 Date de génération: 11/06/2025 18:31                        ║
 ║                                                                      ║
 ║  🔢 NUMÉROS PRINCIPAUX:                                             ║
 ║       1 -  2 -  3 -  4 -  5                                      ║
@@ -15,12 +17,12 @@
 ║                                                                      ║
 ║  📊 CONFIANCE: 52.9%                                      ║
 ║                                                                      ║
-║  ✅ VALIDATION: 1/7 correspondances avec tirage réel      ║
+║  ✅ VALIDATION (avg last 10): 1.00/7 correspondances avec tirages réels      ║
 ║                                                                      ║
 ╠══════════════════════════════════════════════════════════════════════╣
 ║  MÉTHODOLOGIE:                                                       ║
 ║  • Consensus de 1 systèmes d'IA                              ║
-║  • Analyse de 1849 tirages historiques                    ║
+║  • Analyse de 1848 tirages historiques                    ║
 ║  • 0 technologies haute performance            ║
 ║  • Validation scientifique rigoureuse                               ║
 ║                                                                      ║
@@ -34,7 +36,8 @@
 
 DÉTAILS TECHNIQUES:
 - Pondération: Consensus (40%) + Historique (30%) + Récent (20%) + Succès (10%)
-- Validation croisée sur tirage du 06/06/2025
+- Validation: Moyenne sur les 10 derniers tirages réels.
+- (Validation sur tirage de référence 2025-06-06: 1/7)
 - Ajustements automatiques pour contraintes statistiques
 - Métriques de confiance multi-dimensionnelles
 

@@ -1,0 +1,16 @@
+{
+    "main_numbers": [
+        11,
+        13,
+        15,
+        21,
+        36
+    ],
+    "stars": [
+        3,
+        12
+    ],
+    "confidence": 0.5,
+    "method": "Analyse statistique",
+    "timestamp": "2025-06-11 18:31:43"
+}

@@ -93,7 +93,7 @@ class EuromillionsPredictor:
             prediction = {
                 "main_numbers": main_numbers,
                 "stars": stars,
-                "confidence": "Faible (prédiction aléatoire)",
+                "confidence": 0.2,
                 "method": "Aléatoire",
                 "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             }
@@ -180,7 +180,7 @@ class EuromillionsPredictor:
         prediction = {
             "main_numbers": selected_main,
             "stars": selected_stars,
-            "confidence": "Moyenne (analyse statistique simple)",
+            "confidence": 0.5,
             "method": "Analyse statistique",
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
@@ -197,7 +197,7 @@ class EuromillionsPredictor:
         
         print(f"\nDate de génération : {prediction['timestamp']}")
         print(f"Méthode : {prediction['method']}")
-        print(f"Niveau de confiance : {prediction['confidence']}")
+        print(f"Niveau de confiance : {prediction['confidence']:.2f}")
         
         print("\nNUMÉROS PRINCIPAUX :")
         print(" ".join([f"[{num:2d}]" for num in prediction['main_numbers']]))
@@ -230,7 +230,7 @@ class EuromillionsPredictor:
                 
                 f.write(f"Date de génération : {prediction['timestamp']}\n")
                 f.write(f"Méthode : {prediction['method']}\n")
-                f.write(f"Niveau de confiance : {prediction['confidence']}\n\n")
+                f.write(f"Niveau de confiance : {prediction['confidence']:.2f}\n\n")
                 
                 f.write("Numéros principaux :\n")
                 f.write(", ".join(map(str, prediction['main_numbers'])) + "\n\n")

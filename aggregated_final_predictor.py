@@ -38,6 +38,7 @@ class AggregatedFinalPredictor:
         print("🎯 GÉNÉRATEUR DE TIRAGE FINAL AGRÉGÉ 🎯")
         print("=" * 70)
 
+        self.NUM_RECENT_DRAWS = 10  # Number of recent draws for validation
         self.actual_next_draw_date = get_next_euromillions_draw_date("euromillions_enhanced_dataset.csv")
         print(f"🔮 PRÉDICTION POUR LE TIRAGE DU: {self.actual_next_draw_date.strftime('%d/%m/%Y')} (dynamically determined)")
 
@@ -458,7 +459,32 @@ class AggregatedFinalPredictor:
         print("📊 Calcul des métriques de confiance...")
         
         metrics = {}
-        
+
+        # Load recent historical data for validation against recent draws
+        recent_draws_df = None
+        try:
+            # Assuming self.historical_data is already loaded and is the full dataset
+            if self.historical_data is not None and not self.historical_data.empty:
+                if len(self.historical_data) >= self.NUM_RECENT_DRAWS:
+                    recent_draws_df = self.historical_data.tail(self.NUM_RECENT_DRAWS)
+                else:
+                    recent_draws_df = self.historical_data.tail(len(self.historical_data))
+                    print(f"⚠️ Moins de {self.NUM_RECENT_DRAWS} tirages disponibles pour validation ({len(self.historical_data)} utilisés).")
+            else:
+                # Attempt to load if self.historical_data was not loaded or empty
+                full_historical_data_for_recent = pd.read_csv('euromillions_enhanced_dataset.csv')
+                if len(full_historical_data_for_recent) >= self.NUM_RECENT_DRAWS:
+                    recent_draws_df = full_historical_data_for_recent.tail(self.NUM_RECENT_DRAWS)
+                elif not full_historical_data_for_recent.empty:
+                    recent_draws_df = full_historical_data_for_recent.tail(len(full_historical_data_for_recent))
+                    print(f"⚠️ Moins de {self.NUM_RECENT_DRAWS} tirages disponibles ({len(full_historical_data_for_recent)} utilisés).")
+                else:
+                    print("⚠️ Aucune donnée historique (récente ou complète) disponible pour la validation.")
+        except FileNotFoundError:
+            print("⚠️ Fichier euromillions_enhanced_dataset.csv non trouvé pour la validation des tirages récents.")
+        except Exception as e:
+            print(f"⚠️ Erreur lors du chargement/traitement des données récentes pour validation: {e}")
+
         # 1. Score de consensus
         total_votes = sum(consensus['number_votes'].values())
         prediction_votes = sum(consensus['number_votes'].get(num, 0) for num in prediction['numbers'])
@@ -487,15 +513,69 @@ class AggregatedFinalPredictor:
         
         number_matches = len(pred_numbers.intersection(ref_numbers))
         star_matches = len(pred_stars.intersection(ref_stars))
-        validation_score = (number_matches + star_matches) / 7
-        
-        # Score global pondéré
+        validation_score = (number_matches + star_matches) / 7 # Against static reference_draw
+
+        # NEW: Calculate validation against recent draws
+        avg_number_matches_recent = 0.0
+        avg_star_matches_recent = 0.0
+        total_avg_matches_recent = 0.0
+        num_valid_recent_draws = 0
+
+        if recent_draws_df is not None and not recent_draws_df.empty:
+            num_valid_recent_draws = len(recent_draws_df)
+            total_recent_number_matches = 0
+            total_recent_star_matches = 0
+
+            # Ensure column names match those in euromillions_enhanced_dataset.csv (N1-N5, E1-E2)
+            # The historical data loaded in load_historical_data uses num1-num5, star1-star2
+            # Need to use the correct column names based on where recent_draws_df comes from.
+            # Assuming recent_draws_df (if from self.historical_data or direct CSV load) has N1-N5, E1-E2 if it's the enhanced one.
+            # If it's from generate_fallback_data, it will have num1-num5, star1-star2.
+            # Let's try to be robust or ensure consistency. For now, assume N1-N5, E1-E2 for CSV.
+            # If using self.historical_data directly, it might be num1-num5.
+            # The provided dataset `euromillions_enhanced_dataset.csv` uses N1..N5, E1..E2
+
+            col_numbers = [f'N{i}' for i in range(1,6)]
+            col_stars = [f'E{i}' for i in range(1,3)]
+
+            # Check if columns exist, fallback if necessary (e.g. to num1-num5 format)
+            if not all(col in recent_draws_df.columns for col in col_numbers):
+                col_numbers = [f'num{i}' for i in range(1,6)] # Fallback
+            if not all(col in recent_draws_df.columns for col in col_stars):
+                col_stars = [f'star{i}' for i in range(1,3)] # Fallback
+
+
+            for _, draw_row in recent_draws_df.iterrows():
+                try:
+                    actual_numbers = set(draw_row[col_numbers].astype(int))
+                    actual_stars = set(draw_row[col_stars].astype(int))
+
+                    current_number_matches = len(pred_numbers.intersection(actual_numbers))
+                    current_star_matches = len(pred_stars.intersection(actual_stars))
+
+                    total_recent_number_matches += current_number_matches
+                    total_recent_star_matches += current_star_matches
+                except KeyError as ke:
+                    print(f"Erreur de clé lors de l'accès aux colonnes pour la validation récente: {ke}. Tirage ignoré.")
+                    num_valid_recent_draws -=1 # Adjust count of valid draws
+                    continue # Skip this draw
+
+            if num_valid_recent_draws > 0:
+                avg_number_matches_recent = total_recent_number_matches / num_valid_recent_draws
+                avg_star_matches_recent = total_recent_star_matches / num_valid_recent_draws
+                total_avg_matches_recent = (total_recent_number_matches + total_recent_star_matches) / num_valid_recent_draws
+            else:
+                print("⚠️ Aucun tirage récent n'a pu être validé (peut-être en raison d'erreurs de format de colonne).")
+
+        validation_score_recent = total_avg_matches_recent / 7 if num_valid_recent_draws > 0 else 0.0
+
+        # Score global pondéré (using recent validation score)
         global_score = (
             consensus_score * 0.3 +
             star_consensus_score * 0.2 +
             historical_score * 0.2 +
             diversity_score * 0.1 +
-            validation_score * 0.2
+            validation_score_recent * 0.2 # Use recent validation score
         )
         
         metrics = {
@@ -503,13 +583,20 @@ class AggregatedFinalPredictor:
             'star_consensus_score': star_consensus_score,
             'historical_score': historical_score,
             'diversity_score': diversity_score,
-            'validation_score': validation_score,
+            'validation_score_reference_draw': validation_score, # Original score against fixed reference
+            'validation_score_recent_draws': validation_score_recent, # New score against recent draws
             'global_confidence': global_score,
             'confidence_percentage': global_score * 100,
-            'validation_matches': {
+            'validation_matches_reference_draw': { # Original matches against fixed reference
                 'number_matches': number_matches,
                 'star_matches': star_matches,
                 'total_matches': number_matches + star_matches
+            },
+            'validation_matches_recent_draws': { # New average matches against recent draws
+                'avg_number_matches': avg_number_matches_recent,
+                'avg_star_matches': avg_star_matches_recent,
+                'total_avg_matches': total_avg_matches_recent,
+                'num_recent_draws_validated': num_valid_recent_draws
             }
         }
         
@@ -565,7 +652,7 @@ class AggregatedFinalPredictor:
             metrics['star_consensus_score'],
             metrics['historical_score'],
             metrics['diversity_score'],
-            metrics['validation_score']
+            metrics['validation_score_reference_draw'] # Corrected key
         ]
         
         colors = ['lightgreen' if v >= 0.7 else 'orange' if v >= 0.4 else 'lightcoral' for v in metric_values]
@@ -592,8 +679,13 @@ class AggregatedFinalPredictor:
                       fontsize=12, color='red')
         axes[1,1].text(0.1, 0.4, f"Confiance: {metrics['confidence_percentage']:.1f}%", 
                       fontsize=12, fontweight='bold')
-        axes[1,1].text(0.1, 0.3, f"Correspondances validation: {metrics['validation_matches']['total_matches']}/7", 
-                      fontsize=10)
+        # Display new average match score
+        num_validated_recent = metrics['validation_matches_recent_draws']['num_recent_draws_validated']
+        avg_total_recent = metrics['validation_matches_recent_draws']['total_avg_matches']
+        avg_matches_str = f"Avg Matches (last {num_validated_recent} draws): {avg_total_recent:.2f}/7"
+        if num_validated_recent == 0:
+            avg_matches_str = "Avg Matches (recent): N/A"
+        axes[1,1].text(0.1, 0.3, avg_matches_str, fontsize=10)
         axes[1,1].text(0.1, 0.2, f"Basé sur {consensus['total_predictions']} systèmes", 
                       fontsize=10)
         axes[1,1].text(0.1, 0.1, f"Méthodologie: {prediction['methodology']}", 
@@ -667,7 +759,7 @@ class AggregatedFinalPredictor:
 ║                                                                      ║
 ║  📊 CONFIANCE: {metrics['confidence_percentage']:.1f}%                                      ║
 ║                                                                      ║
-║  ✅ VALIDATION: {metrics['validation_matches']['total_matches']}/7 correspondances avec tirage réel      ║
+║  ✅ VALIDATION (avg last {metrics['validation_matches_recent_draws']['num_recent_draws_validated']}): {metrics['validation_matches_recent_draws']['total_avg_matches']:.2f}/7 correspondances avec tirages réels      ║
 ║                                                                      ║
 ╠══════════════════════════════════════════════════════════════════════╣
 ║  MÉTHODOLOGIE:                                                       ║
@@ -686,7 +778,8 @@ class AggregatedFinalPredictor:
 
 DÉTAILS TECHNIQUES:
 - Pondération: Consensus (40%) + Historique (30%) + Récent (20%) + Succès (10%)
-- Validation croisée sur tirage du 06/06/2025
+- Validation: Moyenne sur les {metrics['validation_matches_recent_draws']['num_recent_draws_validated']} derniers tirages réels.
+- (Validation sur tirage de référence {self.reference_draw['date']}: {metrics['validation_matches_reference_draw']['total_matches']}/7)
 - Ajustements automatiques pour contraintes statistiques
 - Métriques de confiance multi-dimensionnelles
 
@@ -706,7 +799,8 @@ DÉTAILS TECHNIQUES:
 ## RÉSUMÉ EXÉCUTIF
 Date de génération: {datetime.now().strftime('%d/%m/%Y %H:%M')}
 Date du tirage cible pour cette prédiction: {self.actual_next_draw_date.strftime('%d/%m/%Y')}
-Tirage de référence pour la validation des métriques: {self.reference_draw['numbers']} + {self.reference_draw['stars']} ({self.reference_draw['date']})
+Validation principale: Moyenne des correspondances sur les {metrics['validation_matches_recent_draws']['num_recent_draws_validated']} derniers tirages réels.
+(Tirage de référence statique pour comparaison: {self.reference_draw['numbers']} + {self.reference_draw['stars']} ({self.reference_draw['date']}))
 
 ## PRÉDICTION FINALE (pour le {self.actual_next_draw_date.strftime('%d/%m/%Y')})
 **Numéros:** {' - '.join(map(str, prediction['numbers']))}
@@ -730,7 +824,8 @@ Tirage de référence pour la validation des métriques: {self.reference_draw['n
 ### Validation et Ajustements
 - Contraintes de somme: {sum(prediction['numbers'])} (plage optimale: 100-200)
 - Distribution équilibrée: Évitement des consécutifs excessifs
-- Validation croisée: {metrics['validation_matches']['total_matches']}/7 correspondances
+- Validation croisée (moyenne récents): {metrics['validation_matches_recent_draws']['total_avg_matches']:.2f}/7 sur {metrics['validation_matches_recent_draws']['num_recent_draws_validated']} tirages
+- (Validation sur réf. statique: {metrics['validation_matches_reference_draw']['total_matches']}/7)
 
 ## ANALYSE DE CONFIANCE
 
@@ -739,7 +834,8 @@ Tirage de référence pour la validation des métriques: {self.reference_draw['n
 - **Score de consensus étoiles:** {metrics['star_consensus_score']:.3f}
 - **Score historique:** {metrics['historical_score']:.3f}
 - **Score de diversité technologique:** {metrics['diversity_score']:.3f}
-- **Score de validation:** {metrics['validation_score']:.3f}
+- **Score de validation (référence):** {metrics['validation_score_reference_draw']:.3f}
+- **Score de validation (récents):** {metrics['validation_score_recent_draws']:.3f} (utilisé pour la confiance globale)
 
 ### Confiance Globale: {metrics['global_confidence']:.3f} ({metrics['confidence_percentage']:.1f}%)
 
@@ -769,29 +865,41 @@ Tirage de référence pour la validation des métriques: {self.reference_draw['n
                 report_content += f"- {star}: {freq} prédictions\n"
         
         report_content += f"""
-## VALIDATION CONTRE TIRAGE RÉEL
+## VALIDATION CONTRE TIRAGES RÉCENTS (Moyenne sur {metrics['validation_matches_recent_draws']['num_recent_draws_validated']} derniers tirages)
 
-### Correspondances Détaillées
-- **Numéros corrects:** {metrics['validation_matches']['number_matches']}/5
-- **Étoiles correctes:** {metrics['validation_matches']['star_matches']}/2
-- **Total:** {metrics['validation_matches']['total_matches']}/7 ({(metrics['validation_matches']['total_matches']/7)*100:.1f}%)
+### Correspondances Moyennes Détaillées
+- **Moy. numéros corrects:** {metrics['validation_matches_recent_draws']['avg_number_matches']:.2f}/5
+- **Moy. étoiles correctes:** {metrics['validation_matches_recent_draws']['avg_star_matches']:.2f}/2
+- **Moy. total correspondances:** {metrics['validation_matches_recent_draws']['total_avg_matches']:.2f}/7 ({(metrics['validation_matches_recent_draws']['total_avg_matches']/7)*100 if metrics['validation_matches_recent_draws']['total_avg_matches'] > 0 else 0.0:.1f}%)
 
-### Analyse des Écarts
+(Pour information, validation contre tirage de référence statique {self.reference_draw['date']}:
+- Numéros corrects: {metrics['validation_matches_reference_draw']['number_matches']}/5
+- Étoiles correctes: {metrics['validation_matches_reference_draw']['star_matches']}/2
+- Total: {metrics['validation_matches_reference_draw']['total_matches']}/7)
+
+### Analyse des Écarts (simplifiée pour la moyenne)
+L'analyse détaillée des écarts (numéros manqués, faux positifs) est complexe pour une moyenne sur plusieurs tirages.
+La métrique principale ici est le nombre moyen de correspondances.
+Une analyse plus poussée pourrait inclure la fréquence à laquelle chaque numéro prédit est apparu
+dans les {metrics['validation_matches_recent_draws']['num_recent_draws_validated']} tirages récents, ou la distribution des correspondances (min/max).
+Pour cette version, nous nous concentrons sur la moyenne des correspondances.
 """
         
-        ref_numbers = set(self.reference_draw['numbers'])
-        pred_numbers = set(prediction['numbers'])
+        # Optional: Keep the old analysis for the reference draw if desired, but label it clearly
+        report_content += "\nAnalyse des Écarts (vs Tirage de Référence Statique):\n"
+        ref_numbers_static = set(self.reference_draw['numbers'])
+        pred_numbers_static = set(prediction['numbers']) # Assuming prediction['numbers'] is available here
         
-        correct_numbers = pred_numbers.intersection(ref_numbers)
-        missed_numbers = ref_numbers - pred_numbers
-        false_positives = pred_numbers - ref_numbers
+        correct_numbers_static = pred_numbers_static.intersection(ref_numbers_static)
+        missed_numbers_static = ref_numbers_static - pred_numbers_static
+        false_positives_static = pred_numbers_static - ref_numbers_static
         
-        if correct_numbers:
-            report_content += f"- **Numéros corrects:** {', '.join(map(str, sorted(correct_numbers)))}\n"
-        if missed_numbers:
-            report_content += f"- **Numéros manqués:** {', '.join(map(str, sorted(missed_numbers)))}\n"
-        if false_positives:
-            report_content += f"- **Faux positifs:** {', '.join(map(str, sorted(false_positives)))}\n"
+        if correct_numbers_static:
+            report_content += f"- Numéros corrects (vs réf. statique): {', '.join(map(str, sorted(correct_numbers_static)))}\n"
+        if missed_numbers_static:
+            report_content += f"- Numéros manqués (vs réf. statique): {', '.join(map(str, sorted(missed_numbers_static)))}\n"
+        if false_positives_static:
+            report_content += f"- Faux positifs (vs réf. statique): {', '.join(map(str, sorted(false_positives_static)))}\n"
         
         report_content += f"""
 ## ENSEIGNEMENTS CLÉS
@@ -814,7 +922,7 @@ Cette prédiction représente la synthèse de tous les enseignements tirés du d
 de 36 systèmes d'IA différents. Elle combine les meilleures pratiques identifiées,
 les patterns de succès validés, et l'analyse rigoureuse des données historiques.
 
-Avec une confiance de {metrics['confidence_percentage']:.1f}% et {metrics['validation_matches']['total_matches']}/7 correspondances validées,
+Avec une confiance de {metrics['confidence_percentage']:.1f}% et une moyenne de {metrics['validation_matches_recent_draws']['total_avg_matches']:.2f}/7 correspondances sur les récents tirages,
 cette prédiction constitue l'aboutissement de notre recherche en IA prédictive
 pour l'Euromillions.
 
