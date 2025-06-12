@@ -31,7 +31,7 @@ class RevolutionaryPredictor:
         print("=" * 60)
         # print("🎯 Cible: Tirage du 10/06/2025") # Old static date
 
-        next_draw_date_obj = get_next_euromillions_draw_date("euromillions_enhanced_dataset.csv")
+        next_draw_date_obj = get_next_euromillions_draw_date("data/euromillions_enhanced_dataset.csv")
         self.target_date = next_draw_date_obj.strftime('%d/%m/%Y') # Format as used before
         self.dynamic_date_obj = next_draw_date_obj
 
@@ -47,8 +47,18 @@ class RevolutionaryPredictor:
         print("📊 Chargement des données fraîches...")
         
         # Utilisation du dataset le plus complet
-        self.df = pd.read_csv('euromillions_enhanced_dataset.csv')
-        print(f"✅ {len(self.df)} tirages historiques chargés (données fraîches)")
+        data_path_primary = 'data/euromillions_enhanced_dataset.csv'
+        data_path_fallback = 'euromillions_enhanced_dataset.csv'
+        if os.path.exists(data_path_primary):
+            self.df = pd.read_csv(data_path_primary)
+            print(f"✅ Données chargées depuis {data_path_primary}: {len(self.df)} tirages historiques chargés (données fraîches)")
+        elif os.path.exists(data_path_fallback):
+            self.df = pd.read_csv(data_path_fallback)
+            print(f"✅ Données chargées depuis {data_path_fallback} (répertoire courant): {len(self.df)} tirages historiques chargés (données fraîches)")
+        else:
+            print(f"❌ ERREUR: Fichier de données non trouvé ({data_path_primary} ou {data_path_fallback})")
+            self.df = pd.DataFrame() # Or sys.exit(1)
+            # For now, let it proceed and potentially fail later if df is critical and empty
         
         # Conversion des dates
         self.df['Date'] = pd.to_datetime(self.df['Date'])

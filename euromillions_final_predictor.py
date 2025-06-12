@@ -21,7 +21,7 @@ def load_final_prediction():
     Charge la prédiction finale optimisée.
     """
     try:
-        with open('/home/ubuntu/results/final_optimization/final_optimized_prediction.json', 'r') as f:
+        with open('results/final_optimization/final_optimized_prediction.json', 'r') as f:
             return json.load(f)
     except:
         # Prédiction par défaut si fichier non trouvé
@@ -82,7 +82,7 @@ Confiance: {prediction['confidence']:.1f}/10
 ⚠️ Jeu responsable uniquement
 """
     
-    filename = f"/home/ubuntu/ticket_euromillions_{datetime.now().strftime('%Y%m%d_%H%M')}.txt"
+    filename = f"ticket_euromillions_{datetime.now().strftime('%Y%m%d_%H%M')}.txt"
     with open(filename, 'w') as f:
         f.write(ticket)
     

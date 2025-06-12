@@ -321,11 +321,14 @@ def main():
     os.makedirs("plots", exist_ok=True)
     
     # Charger et préparer les données
+    # This main() function is effectively commented out by the new if __name__ == "__main__": block
+    # However, if it were to be used, its data path would need adjustment.
+    # For now, focusing on the active functions train_all_models_and_predict and predict_with_tensorflow_model
     (
         X_main_train, y_main_train, X_main_test, y_main_test,
         X_stars_train, y_stars_train, X_stars_test, y_stars_test,
         main_scaler, stars_scaler
-    ) = load_and_prepare_data("euromillions_dataset.csv")
+    ) = load_and_prepare_data("data/euromillions_dataset.csv") # Added data/ prefix
     
     # Créer les modèles
     main_model = create_main_numbers_model((X_main_train.shape[1], X_main_train.shape[2]))
@@ -417,14 +420,29 @@ def predict_with_tensorflow_model(use_enhanced_data=False): # Added use_enhanced
             'message': 'Models not found. Please train them or ensure dummy models exist.'
         }
 
-    dataset_path = "euromillions_enhanced_dataset.csv" if use_enhanced_data else "euromillions_dataset.csv"
-    try:
-        df = pd.read_csv(dataset_path)
-    except FileNotFoundError:
+    dataset_path_primary = f"data/euromillions{'_enhanced' if use_enhanced_data else ''}_dataset.csv"
+    dataset_path_fallback = f"euromillions{'_enhanced' if use_enhanced_data else ''}_dataset.csv"
+
+    actual_dataset_path = None
+    if os.path.exists(dataset_path_primary):
+        actual_dataset_path = dataset_path_primary
+    elif os.path.exists(dataset_path_fallback):
+        actual_dataset_path = dataset_path_fallback
+        print(f"ℹ️ Using dataset from fallback: {actual_dataset_path}")
+
+    if not actual_dataset_path:
         return {
             'numbers': [], 'stars': [], 'confidence': None,
             'model_name': current_model_name, 'status': 'failure',
-            'message': f'{dataset_path} not found.'
+            'message': f'{dataset_path_primary} (or {dataset_path_fallback}) not found.'
+        }
+    try:
+        df = pd.read_csv(actual_dataset_path)
+    except FileNotFoundError: # Should be caught by the check above, but as a safeguard
+        return {
+            'numbers': [], 'stars': [], 'confidence': None,
+            'model_name': current_model_name, 'status': 'failure',
+            'message': f'{actual_dataset_path} not found (secondary check).'
         }
 
     df['Date'] = pd.to_datetime(df['Date'])
@@ -443,7 +461,7 @@ def predict_with_tensorflow_model(use_enhanced_data=False): # Added use_enhanced
         return {
             'numbers': [], 'stars': [], 'confidence': None,
             'model_name': current_model_name, 'status': 'failure',
-            'message': f'Not enough data to form a sequence (need {SEQUENCE_LENGTH}, got {len(main_normalized_full)} from {dataset_path}).'
+            'message': f'Not enough data to form a sequence (need {SEQUENCE_LENGTH}, got {len(main_normalized_full)} from {actual_dataset_path}).'
         }
 
     X_main_last_sequence_data = main_normalized_full[-SEQUENCE_LENGTH:]
@@ -479,7 +497,7 @@ def predict_with_tensorflow_model(use_enhanced_data=False): # Added use_enhanced
     final_stars = unique_stars[:2]
 
 
-    next_draw_date_obj = get_next_euromillions_draw_date(dataset_path) # Use chosen dataset_path
+    next_draw_date_obj = get_next_euromillions_draw_date(actual_dataset_path) # Use chosen actual_dataset_path
     target_date_str = next_draw_date_obj.strftime('%Y-%m-%d')
 
     return {
@@ -499,14 +517,26 @@ def train_all_models_and_predict(use_enhanced_data=False):
     os.makedirs("models", exist_ok=True)
     os.makedirs("plots", exist_ok=True)
 
-    dataset_path = "euromillions_enhanced_dataset.csv" if use_enhanced_data else "euromillions_dataset.csv"
-    print(f"--- Training models using: {dataset_path} ---")
+    dataset_path_primary = f"data/euromillions{'_enhanced' if use_enhanced_data else ''}_dataset.csv"
+    dataset_path_fallback = f"euromillions{'_enhanced' if use_enhanced_data else ''}_dataset.csv"
+    actual_dataset_path_train = None
+    if os.path.exists(dataset_path_primary):
+        actual_dataset_path_train = dataset_path_primary
+    elif os.path.exists(dataset_path_fallback):
+        actual_dataset_path_train = dataset_path_fallback
+        print(f"ℹ️ Using dataset from fallback for training: {actual_dataset_path_train}")
+
+    if not actual_dataset_path_train:
+        print(f"❌ Training aborted: Dataset not found ({dataset_path_primary} or {dataset_path_fallback}).")
+        return
+
+    print(f"--- Training models using: {actual_dataset_path_train} ---")
 
     (
         X_main_train, y_main_train, X_main_test, y_main_test,
         X_stars_train, y_stars_train, X_stars_test, y_stars_test,
         main_scaler, stars_scaler
-    ) = load_and_prepare_data(dataset_path) # Pass dataset_path
+    ) = load_and_prepare_data(actual_dataset_path_train) # Pass actual_dataset_path_train
 
     main_model = create_main_numbers_model((X_main_train.shape[1], X_main_train.shape[2]))
     stars_model = create_stars_model((X_stars_train.shape[1], X_stars_train.shape[2]))

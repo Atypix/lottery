@@ -56,7 +56,7 @@ class SingularityPredictor:
     Prédicteur de la Singularité Technologique Ultime.
     """
     
-    def __init__(self, data_path: str = "euromillions_enhanced_dataset.csv"):
+    def __init__(self, data_path: str = "data/euromillions_enhanced_dataset.csv"):
         """
         Initialise le système de singularité technologique.
         """
@@ -74,11 +74,14 @@ class SingularityPredictor:
         print("🚀 INITIALISATION DE LA SINGULARITÉ... 🚀")
         
         # Chargement des données
-        if os.path.exists(data_path):
+        if os.path.exists(data_path): # Checks "data/euromillions_enhanced_dataset.csv"
             self.df = pd.read_csv(data_path)
-            print(f"✅ Données chargées: {len(self.df)} tirages")
+            print(f"✅ Données chargées depuis {data_path}: {len(self.df)} tirages")
+        elif os.path.exists("euromillions_enhanced_dataset.csv"): # Fallback to current dir
+            self.df = pd.read_csv("euromillions_enhanced_dataset.csv")
+            print(f"✅ Données chargées depuis le répertoire courant (euromillions_enhanced_dataset.csv): {len(self.df)} tirages")
         else:
-            print("❌ Fichier non trouvé, utilisation de données de base...")
+            print(f"❌ Fichier principal non trouvé ({data_path} ou euromillions_enhanced_dataset.csv). Utilisation de données de base...")
             self.load_basic_data()
         
         # État de la singularité
@@ -97,9 +100,14 @@ class SingularityPredictor:
         """
         Charge des données de base.
         """
-        if os.path.exists("euromillions_dataset.csv"):
+        if os.path.exists("data/euromillions_dataset.csv"):
+            self.df = pd.read_csv("data/euromillions_dataset.csv")
+            print(f"✅ Données de base chargées depuis data/euromillions_dataset.csv: {len(self.df)} tirages")
+        elif os.path.exists("euromillions_dataset.csv"): # Fallback to current dir
             self.df = pd.read_csv("euromillions_dataset.csv")
+            print(f"✅ Données de base chargées depuis le répertoire courant (euromillions_dataset.csv): {len(self.df)} tirages")
         else:
+            print("❌ Fichier de données de base (euromillions_dataset.csv) non trouvé. Création de données synthétiques...")
             # Création de données synthétiques
             dates = pd.date_range(start='2020-01-01', end='2025-06-01', freq='3D')
             data = []
@@ -278,11 +286,11 @@ class SingularityPredictor:
         print("=" * 65)
         
         paradigms = {
-            'conscious_ai': '/home/ubuntu/conscious_ai_predictor.py',
-            'multiverse': '/home/ubuntu/multiverse_predictor.py',
-            'chaos_fractal': '/home/ubuntu/chaos_fractal_predictor.py',
-            'swarm_intelligence': '/home/ubuntu/swarm_intelligence_predictor.py',
-            'quantum_bio': '/home/ubuntu/quantum_bio_predictor.py'
+            'conscious_ai': 'conscious_ai_predictor.py',
+            'multiverse': 'multiverse_predictor.py',
+            'chaos_fractal': 'chaos_fractal_predictor.py',
+            'swarm_intelligence': 'swarm_intelligence_predictor.py',
+            'quantum_bio': 'quantum_bio_predictor.py'
         }
         
         results = {}

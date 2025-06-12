@@ -529,7 +529,21 @@ def main():
     
     # Charger et préparer les données
     print("Chargement et préparation des données...")
-    data = predictor.load_and_prepare_data("euromillions_enhanced_dataset.csv")
+    # Determine which dataset to use based on existence
+    data_path_primary = "data/euromillions_enhanced_dataset.csv"
+    data_path_fallback = "euromillions_enhanced_dataset.csv"
+    actual_data_path = None
+    if os.path.exists(data_path_primary):
+        actual_data_path = data_path_primary
+    elif os.path.exists(data_path_fallback):
+        actual_data_path = data_path_fallback
+        print(f"ℹ️  Données chargées depuis {actual_data_path} (fallback) pour l'entraînement principal.")
+
+    if not actual_data_path:
+        print(f"❌ ERREUR CRITIQUE: Dataset principal non trouvé ({data_path_primary} ou {data_path_fallback}). Arrêt.")
+        return # Or sys.exit(1)
+
+    data = predictor.load_and_prepare_data(actual_data_path)
     
     # Entraîner tous les modèles
     predictor.train_lstm_models(data)
@@ -544,7 +558,12 @@ def main():
     
     # Faire une prédiction
     print("\nGénération d'une prédiction optimisée...")
-    df = pd.read_csv("euromillions_enhanced_dataset.csv")
+    # Use the same actual_data_path for consistency in prediction context
+    if not actual_data_path: # Should be set from above, but as a safeguard
+        print("❌ ERREUR CRITIQUE: Dataset non disponible pour la prédiction. Arrêt.")
+        return
+
+    df = pd.read_csv(actual_data_path)
     df['Date'] = pd.to_datetime(df['Date'])
     
     main_numbers, star_numbers = predictor.predict_next_numbers(df)

@@ -60,10 +60,10 @@ class AdvancedMLPredictor:
         print("🔧 Configuration de l'environnement ML...")
         
         # Dossiers pour les modèles
-        os.makedirs('/home/ubuntu/results/scientific/models', exist_ok=True)
-        os.makedirs('/home/ubuntu/results/scientific/models/trained', exist_ok=True)
-        os.makedirs('/home/ubuntu/results/scientific/models/evaluation', exist_ok=True)
-        os.makedirs('/home/ubuntu/results/scientific/predictions', exist_ok=True)
+        os.makedirs('results/scientific/models', exist_ok=True)
+        os.makedirs('results/scientific/models/trained', exist_ok=True)
+        os.makedirs('results/scientific/models/evaluation', exist_ok=True)
+        os.makedirs('results/scientific/predictions', exist_ok=True)
         
         # Configuration ML
         self.ml_config = {
@@ -85,10 +85,10 @@ class AdvancedMLPredictor:
         
         try:
             # Chargement des données
-            self.df = pd.read_csv('/home/ubuntu/euromillions_enhanced_dataset.csv')
+            self.df = pd.read_csv('data/euromillions_enhanced_dataset.csv') # Added data/ prefix
             
             # Chargement de l'analyse statistique
-            with open('/home/ubuntu/results/scientific/analysis/statistical_analysis.json', 'r') as f:
+            with open('results/scientific/analysis/statistical_analysis.json', 'r') as f:
                 self.statistical_results = json.load(f)
             
             # Tirage de référence
@@ -645,11 +645,11 @@ class AdvancedMLPredictor:
             'timestamp': datetime.now().isoformat()
         }
         
-        with open('/home/ubuntu/results/scientific/models/ml_results.json', 'w') as f:
+        with open('results/scientific/models/ml_results.json', 'w') as f:
             json.dump(ml_results, f, indent=2, default=str)
         
         # Sauvegarde de la prédiction
-        with open('/home/ubuntu/results/scientific/predictions/scientific_prediction.json', 'w') as f:
+        with open('results/scientific/predictions/scientific_prediction.json', 'w') as f:
             json.dump(prediction_result, f, indent=2, default=str)
         
         print("✅ Résultats ML sauvegardés!")
@@ -776,7 +776,7 @@ Rapport généré par le Système ML Scientifique Euromillions
 =========================================================
 """
 
-        with open('/home/ubuntu/results/scientific/models/performance_report.txt', 'w') as f:
+        with open('results/scientific/models/performance_report.txt', 'w') as f:
             f.write(report)
         
         print("✅ Rapport de performance généré!")

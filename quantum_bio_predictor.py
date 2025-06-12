@@ -311,7 +311,7 @@ class QuantumSpikingPredictor:
     pour la prédiction Euromillions.
     """
     
-    def __init__(self, data_path: str = "euromillions_enhanced_dataset.csv"):
+    def __init__(self, data_path: str = "data/euromillions_enhanced_dataset.csv"):
         """
         Initialise le prédicteur quantique-biologique révolutionnaire.
         """
@@ -319,12 +319,17 @@ class QuantumSpikingPredictor:
         print("=" * 60)
         
         # Chargement des données
-        if os.path.exists(data_path):
-            self.df = pd.read_csv(data_path)
-            print(f"✅ Données chargées: {len(self.df)} tirages")
+        data_path_primary = data_path
+        data_path_fallback = "euromillions_enhanced_dataset.csv"
+        if os.path.exists(data_path_primary):
+            self.df = pd.read_csv(data_path_primary)
+            print(f"✅ Données chargées depuis {data_path_primary}: {len(self.df)} tirages")
+        elif os.path.exists(data_path_fallback):
+            self.df = pd.read_csv(data_path_fallback)
+            print(f"✅ Données chargées depuis {data_path_fallback} (répertoire courant): {len(self.df)} tirages")
         else:
-            print("❌ Fichier de données non trouvé, création de données synthétiques...")
-            self.create_synthetic_data()
+            print(f"❌ Fichier de données non trouvé ({data_path_primary} ou {data_path_fallback}), création de données synthétiques...")
+            self.create_synthetic_data() # This function doesn't load, it creates if others fail.
         
         # Initialisation des composants révolutionnaires
         self.quantum_sim = QuantumSimulator(n_qubits=8)

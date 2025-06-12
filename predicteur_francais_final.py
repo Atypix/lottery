@@ -10,7 +10,7 @@ from datetime import datetime
 
 def load_french_prediction():
     """Charge la prédiction française finale"""
-    result_path = '/home/ubuntu/results/french_aggregation/final_french_prediction.json'
+    result_path = 'results/french_aggregation/final_french_prediction.json'
     
     if os.path.exists(result_path):
         with open(result_path, 'r') as f:
@@ -85,7 +85,7 @@ Généré le {datetime.now().strftime('%d/%m/%Y')}
 Basé sur {prediction_data['total_draws_analyzed']} tirages français récents
 """
     
-    with open('/home/ubuntu/ticket_final_francais.txt', 'w') as f:
+    with open('ticket_final_francais.txt', 'w') as f:
         f.write(ticket_simple)
     
     print("💾 Ticket sauvegardé : ticket_final_francais.txt")

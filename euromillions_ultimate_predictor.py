@@ -30,11 +30,12 @@ class EuromillionsUltimatePredictor:
     Prédicteur Euromillions ultra-optimisé combinant toutes les techniques avancées.
     """
     
-    def __init__(self, data_path="euromillions_enhanced_dataset.csv"):
+    def __init__(self, data_path="data/euromillions_enhanced_dataset.csv"): # Added data/ prefix
         """
         Initialise le prédicteur avec toutes les techniques avancées.
         """
-        self.data_path = data_path
+        self.data_path_primary = data_path # Default is data/euromillions_enhanced_dataset.csv
+        self.data_path_fallback = "euromillions_enhanced_dataset.csv" # Fallback to root
         self.df = None
         self.scaler = StandardScaler()
         
@@ -55,11 +56,18 @@ class EuromillionsUltimatePredictor:
         """
         Charge et prépare les données enrichies.
         """
-        if os.path.exists(self.data_path):
-            self.df = pd.read_csv(self.data_path)
-            print(f"✅ Données chargées : {len(self.df)} tirages avec {len(self.df.columns)} caractéristiques.")
+        actual_data_file_to_load = None
+        if os.path.exists(self.data_path_primary):
+            actual_data_file_to_load = self.data_path_primary
+        elif os.path.exists(self.data_path_fallback):
+            actual_data_file_to_load = self.data_path_fallback
+            print(f"ℹ️ Données chargées depuis {actual_data_file_to_load} (répertoire courant)")
+
+        if actual_data_file_to_load:
+            self.df = pd.read_csv(actual_data_file_to_load)
+            print(f"✅ Données chargées depuis {actual_data_file_to_load}: {len(self.df)} tirages avec {len(self.df.columns)} caractéristiques.")
         else:
-            print("❌ Fichier de données non trouvé. Création d'un jeu de données synthétique.")
+            print(f"❌ Fichier de données non trouvé ({self.data_path_primary} ou {self.data_path_fallback}). Création d'un jeu de données synthétique.")
             self.create_synthetic_data()
     
     def create_synthetic_data(self):

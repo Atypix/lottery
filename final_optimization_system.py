@@ -64,10 +64,10 @@ class FinalOptimizationSystem:
         print("🔧 Configuration de l'environnement d'optimisation finale...")
         
         # Création des répertoires
-        os.makedirs('/home/ubuntu/results/final_optimization', exist_ok=True)
-        os.makedirs('/home/ubuntu/results/final_optimization/models', exist_ok=True)
-        os.makedirs('/home/ubuntu/results/final_optimization/predictions', exist_ok=True)
-        os.makedirs('/home/ubuntu/results/final_optimization/visualizations', exist_ok=True)
+        os.makedirs('results/final_optimization', exist_ok=True)
+        os.makedirs('results/final_optimization/models', exist_ok=True)
+        os.makedirs('results/final_optimization/predictions', exist_ok=True)
+        os.makedirs('results/final_optimization/visualizations', exist_ok=True)
         
         # Paramètres d'optimisation finale
         self.final_params = {
@@ -89,10 +89,26 @@ class FinalOptimizationSystem:
         
         # Données Euromillions
         try:
-            self.df = pd.read_csv('/home/ubuntu/euromillions_enhanced_dataset.csv')
-            print(f"✅ Données Euromillions: {len(self.df)} tirages")
-        except:
-            print("❌ Erreur chargement données Euromillions")
+            data_path_primary = 'data/euromillions_enhanced_dataset.csv'
+            data_path_fallback = 'euromillions_enhanced_dataset.csv'
+            actual_data_path = None
+            if os.path.exists(data_path_primary):
+                actual_data_path = data_path_primary
+            elif os.path.exists(data_path_fallback):
+                actual_data_path = data_path_fallback
+                print(f"ℹ️ Données Euromillions chargées depuis {actual_data_path} (fallback)")
+
+            if actual_data_path:
+                self.df = pd.read_csv(actual_data_path)
+                print(f"✅ Données Euromillions ({actual_data_path}): {len(self.df)} tirages")
+            else:
+                print(f"❌ ERREUR: Fichier de données Euromillions non trouvé ({data_path_primary} ou {data_path_fallback})")
+                self.df = pd.DataFrame() # Fallback to empty
+                # Consider exiting or raising an error if self.df is critical
+                if self.df.empty:
+                    raise FileNotFoundError("Critical dataset euromillions_enhanced_dataset.csv not found.")
+        except Exception as e: # Catching general exception from read_csv
+            print(f"❌ Erreur chargement données Euromillions: {e}")
             return
             
         # Tirage cible
@@ -110,15 +126,19 @@ class FinalOptimizationSystem:
         
         # Résultats de validation
         try:
-            with open('/home/ubuntu/results/advanced_validation/validation_results.json', 'r') as f:
+            with open('results/advanced_validation/validation_results.json', 'r') as f:
                 self.validation_results = json.load(f)
             print("✅ Résultats de validation chargés!")
-        except:
-            print("❌ Erreur chargement résultats de validation")
+        except FileNotFoundError:
+            print("❌ Fichier de résultats de validation (results/advanced_validation/validation_results.json) non trouvé.")
+            self.validation_results = {} # Default to empty
+        except Exception as e:
+            print(f"❌ Erreur chargement résultats de validation: {e}")
+            self.validation_results = {} # Default to empty
             
         # Résultats révolutionnaires
         try:
-            with open('/home/ubuntu/results/revolutionary_improvements/ultimate_prediction.json', 'r') as f:
+            with open('results/revolutionary_improvements/ultimate_prediction.json', 'r') as f:
                 data = json.load(f)
             
             # Conversion et nettoyage
@@ -644,7 +664,7 @@ class FinalOptimizationSystem:
         print("💾 Sauvegarde des résultats finaux...")
         
         # Sauvegarde JSON
-        with open('/home/ubuntu/results/final_optimization/final_optimized_prediction.json', 'w') as f:
+        with open('results/final_optimization/final_optimized_prediction.json', 'w') as f:
             json.dump(final_prediction, f, indent=2, default=str)
             
         # Rapport final
@@ -707,7 +727,7 @@ Niveau d'optimisation: MAXIMUM
 ✅ SYSTÈME FINAL OPTIMISÉ ULTIME PRÊT!
 """
         
-        with open('/home/ubuntu/results/final_optimization/final_optimization_report.txt', 'w') as f:
+        with open('results/final_optimization/final_optimization_report.txt', 'w') as f:
             f.write(report)
             
         # Prédiction simple pour utilisation
@@ -725,7 +745,7 @@ de tous les systèmes d'IA développés et validés.
 Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 """
         
-        with open('/home/ubuntu/results/final_optimization/final_prediction.txt', 'w') as f:
+        with open('results/final_optimization/final_prediction.txt', 'w') as f:
             f.write(simple_prediction)
             
         print("✅ Résultats finaux sauvegardés!")

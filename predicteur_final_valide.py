@@ -31,7 +31,7 @@ class FinalValidatedPredictor:
         print("🏆 PRÉDICTEUR FINAL - CORRESPONDANCES PARFAITES VALIDÉES 🏆")
         print("=" * 65)
 
-        self.actual_next_draw_date = get_next_euromillions_draw_date("euromillions_enhanced_dataset.csv")
+        self.actual_next_draw_date = get_next_euromillions_draw_date("data/euromillions_enhanced_dataset.csv")
         print(f"🔮 Prédiction pour le tirage du: {self.actual_next_draw_date.strftime('%d/%m/%Y')} (dynamically determined)")
 
         print("Méthodologie: Optimisation ciblée scientifiquement validée")
@@ -45,8 +45,18 @@ class FinalValidatedPredictor:
     def load_data(self):
         """Charge les données historiques."""
         print("📊 Chargement des données validées...")
-        self.df = pd.read_csv('euromillions_enhanced_dataset.csv')
-        print(f"✅ {len(self.df)} tirages historiques chargés")
+        data_path_primary = 'data/euromillions_enhanced_dataset.csv'
+        data_path_fallback = 'euromillions_enhanced_dataset.csv'
+        if os.path.exists(data_path_primary):
+            self.df = pd.read_csv(data_path_primary)
+            print(f"✅ Données chargées depuis {data_path_primary}: {len(self.df)} tirages historiques chargés")
+        elif os.path.exists(data_path_fallback):
+            self.df = pd.read_csv(data_path_fallback)
+            print(f"✅ Données chargées depuis {data_path_fallback} (répertoire courant): {len(self.df)} tirages historiques chargés")
+        else:
+            print(f"❌ ERREUR: Fichier de données non trouvé ({data_path_primary} ou {data_path_fallback})")
+            self.df = pd.DataFrame() # Or sys.exit(1)
+            # For now, let it proceed and potentially fail later if df is critical
         
     def setup_validated_model(self):
         """Configure le modèle validé scientifiquement."""

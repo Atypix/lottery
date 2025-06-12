@@ -135,14 +135,24 @@ def predict_next_numbers(main_model, stars_model, X_main_last, X_stars_last, mai
 
 def main():
     parser = argparse.ArgumentParser(description="Prédire les numéros de l'Euromillions")
-    parser.add_argument("--data", default="euromillions_dataset.csv", help="Chemin vers le fichier CSV des données")
+    parser.add_argument("--data", default="data/euromillions_dataset.csv", help="Chemin vers le fichier CSV des données")
     parser.add_argument("--models-dir", default="models", help="Répertoire contenant les modèles")
     parser.add_argument("--output", default="prediction.txt", help="Fichier de sortie pour la prédiction")
     args = parser.parse_args()
     
     # Vérifier si les fichiers et répertoires existent
-    if not os.path.exists(args.data):
-        print(f"Erreur : Fichier de données {args.data} non trouvé.")
+    # Adjusted to check primary and fallback for data arg
+    data_path_primary = args.data
+    data_path_fallback = os.path.basename(args.data) # e.g. "euromillions_dataset.csv" if args.data was "data/..."
+
+    actual_data_path = None
+    if os.path.exists(data_path_primary):
+        actual_data_path = data_path_primary
+    elif os.path.exists(data_path_fallback):
+        actual_data_path = data_path_fallback
+        print(f"ℹ️ Fichier de données trouvé à {actual_data_path} (fallback)")
+    else:
+        print(f"Erreur : Fichier de données {data_path_primary} (ou {data_path_fallback}) non trouvé.")
         sys.exit(1)
     
     if not os.path.exists(args.models_dir):
@@ -155,7 +165,7 @@ def main():
     
     # Préparer les données
     print("Préparation des données...")
-    X_main_last, X_stars_last, main_scaler, stars_scaler = prepare_data(args.data)
+    X_main_last, X_stars_last, main_scaler, stars_scaler = prepare_data(actual_data_path)
     
     # Prédire les prochains numéros
     print("Génération des prédictions...")
