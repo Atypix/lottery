@@ -5,6 +5,60 @@ from datetime import datetime, timedelta
 import json
 import time
 import re
+import io
+import zipfile
+import os
+
+def download_and_extract_fdj_csv(zip_url: str, output_csv_path: str) -> bool:
+    """
+    Downloads a ZIP file from the given URL, extracts the first CSV file found within it,
+    and saves it to the specified output path.
+
+    Args:
+        zip_url: The URL to download the ZIP file from.
+        output_csv_path: The path (including filename) where the extracted CSV should be saved.
+
+    Returns:
+        True if successful, False otherwise.
+    """
+    print(f"Attempting to download FDJ data from: {zip_url}")
+    try:
+        response = requests.get(zip_url, timeout=30)
+        response.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)
+        print("FDJ ZIP file downloaded successfully.")
+
+        # Ensure the output directory exists
+        output_dir = os.path.dirname(output_csv_path)
+        if output_dir: # Check if output_dir is not an empty string (i.e. path has a directory)
+            os.makedirs(output_dir, exist_ok=True)
+
+        with zipfile.ZipFile(io.BytesIO(response.content)) as zf:
+            csv_filename = None
+            for member_name in zf.namelist():
+                if member_name.lower().endswith('.csv'):
+                    csv_filename = member_name
+                    print(f"Found CSV file in ZIP: {csv_filename}")
+                    break
+
+            if csv_filename:
+                with zf.open(csv_filename) as csv_file_in_zip:
+                    with open(output_csv_path, 'wb') as outfile: # write in binary mode
+                        outfile.write(csv_file_in_zip.read())
+                print(f"Successfully extracted and saved FDJ CSV to: {output_csv_path}")
+                return True
+            else:
+                print("Error: No CSV file found in the downloaded ZIP archive.")
+                return False
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error downloading FDJ ZIP file: {e}")
+        return False
+    except zipfile.BadZipFile:
+        print("Error: Downloaded file is not a valid ZIP archive or is corrupted.")
+        return False
+    except Exception as e:
+        print(f"An unexpected error occurred during FDJ data processing: {e}")
+        return False
 
 def fetch_euromillions_data():
     """
