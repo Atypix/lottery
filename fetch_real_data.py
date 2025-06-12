@@ -463,6 +463,102 @@ def save_enhanced_dataset(df, filename="euromillions_enhanced_dataset.csv"):
     print(f"Dimensions: {df.shape}")
     print(f"Colonnes: {df.columns.tolist()}")
 
+def _parse_and_validate_numbers(input_str, count, max_val, name="numbers"):
+    """Helper to parse and validate comma/hyphen/space separated numbers."""
+    try:
+        # Replace hyphens and commas with spaces, then split
+        parts = input_str.replace('-', ' ').replace(',', ' ').split()
+        numbers = [int(p) for p in parts]
+        if len(numbers) != count:
+            print(f"Error: Please enter exactly {count} {name}, separated by spaces/hyphens. You entered {len(numbers)}.")
+            return None
+        if len(set(numbers)) != count:
+            print(f"Error: All {name} must be unique. You entered: {numbers}")
+            return None
+        for num in numbers:
+            if not (1 <= num <= max_val):
+                print(f"Error: Each {name} must be between 1 and {max_val}. You entered: {num}")
+                return None
+        return sorted(numbers)
+    except ValueError:
+        print("Error: Invalid input. Please enter numbers only.")
+        return None
+    except Exception as e:
+        print(f"An unexpected error during input parsing: {e}")
+        return None
+
+def prompt_for_missing_draws(latest_known_date, current_date):
+    """
+    Prompts the user to manually enter data for Euromillions draws that might be missing
+    between the latest known date from data and the current date.
+
+    Args:
+        latest_known_date (datetime.date): The most recent date for which data is available.
+        current_date (datetime.date): The current actual date.
+
+    Returns:
+        list: A list of dictionaries, where each dictionary represents a manually entered draw
+              and contains 'Date' (datetime.date), 'N1'...'N5', 'E1', 'E2'.
+              Returns an empty list if no data is entered.
+    """
+    manual_entries = []
+
+    # Start checking from the day after the latest known date
+    check_date = latest_known_date + timedelta(days=1)
+
+    print("\n--- Manual Data Entry for Missing Draws ---")
+    while check_date < current_date:
+        # Euromillions draws are on Tuesdays (1) and Fridays (4)
+        if check_date.weekday() in [1, 4]:
+            print(f"A draw might have occurred on {check_date.strftime('%Y-%m-%d')} ({check_date.strftime('%A')}).")
+            while True:
+                choice = input(f"Do you want to add data for this date? (y/n): ").strip().lower()
+                if choice in ['y', 'n']:
+                    break
+                print("Invalid input. Please enter 'y' or 'n'.")
+
+            if choice == 'y':
+                print(f"Entering data for draw date: {check_date.strftime('%Y-%m-%d')}")
+
+                # Get main numbers
+                main_numbers = None
+                while main_numbers is None:
+                    num_input = input(f"Enter 5 main numbers (1-50), separated by hyphens or spaces: ")
+                    main_numbers = _parse_and_validate_numbers(num_input, 5, 50, "main numbers")
+
+                # Get star numbers
+                star_numbers = None
+                while star_numbers is None:
+                    star_input = input(f"Enter 2 star numbers (1-12), separated by hyphens or spaces: ")
+                    star_numbers = _parse_and_validate_numbers(star_input, 2, 12, "star numbers")
+
+                entry = {
+                    'Date': check_date, # Store as datetime.date object
+                    'N1': main_numbers[0],
+                    'N2': main_numbers[1],
+                    'N3': main_numbers[2],
+                    'N4': main_numbers[3],
+                    'N5': main_numbers[4],
+                    'E1': star_numbers[0],
+                    'E2': star_numbers[1]
+                }
+                manual_entries.append(entry)
+                print(f"Draw data for {check_date.strftime('%Y-%m-%d')} added.")
+            else:
+                print(f"Skipping manual entry for {check_date.strftime('%Y-%m-%d')}.")
+
+        check_date += timedelta(days=1)
+        if len(manual_entries) > 0 and check_date.weekday() not in [1,4]: # Add a small break if user entered data
+            add_more = input("Do you want to check for more missing dates to add? (y/n): ").strip().lower()
+            if add_more == 'n':
+                break
+
+
+    if not manual_entries:
+        print("No manual entries were added or no missing draw dates found in the checked period.")
+    print("--- End of Manual Data Entry ---")
+    return manual_entries
+
 def update_euromillions_data():
     """
     Fonction principale pour récupérer, améliorer les données et retourner un statut.
@@ -510,6 +606,58 @@ def update_euromillions_data():
     else:
         date_min_str, date_max_str = "N/A", "N/A"
         print("\nPériode couverte: N/A (Date column missing or empty)")
+
+    # --- Manual Data Entry Integration ---
+    latest_date_in_df_for_prompt = None
+    if 'Date' in df.columns and not df.empty:
+        try:
+            # Ensure Date is datetime type before calling .max().date()
+            if not pd.api.types.is_datetime64_any_dtype(df['Date']):
+                df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
+                df.dropna(subset=['Date'], inplace=True) # Remove rows if date conversion failed
+
+            if not df.empty:
+                latest_date_in_df_for_prompt = df['Date'].max().date()
+            else:
+                print("Warning: DataFrame is empty after date conversion, cannot determine latest date for manual prompts.")
+                latest_date_in_df_for_prompt = datetime.now().date() - timedelta(days=30) # Default to avoid excessive prompts
+        except Exception as e:
+            print(f"Error accessing df['Date'].max().date(): {e}. Using a default date for manual prompt check.")
+            latest_date_in_df_for_prompt = datetime.now().date() - timedelta(days=30) # Default
+    else:
+        print("Warning: 'Date' column not in df or df is empty. Using a default date for manual prompt check.")
+        latest_date_in_df_for_prompt = datetime.now().date() - timedelta(days=30) # Default
+
+
+    manual_entries_data = prompt_for_missing_draws(latest_date_in_df_for_prompt, datetime.now().date())
+
+    if manual_entries_data:
+        print("Integrating manually entered draws...")
+        manual_df = pd.DataFrame(manual_entries_data)
+
+        # Ensure 'Date' in manual_df is also datetime
+        manual_df['Date'] = pd.to_datetime(manual_df['Date'])
+
+        # Concatenate
+        df = pd.concat([df, manual_df], ignore_index=True)
+
+        # Remove duplicates based on 'Date', keeping the last entry
+        df.drop_duplicates(subset=['Date'], keep='last', inplace=True)
+
+        # Sort by date again
+        df.sort_values('Date', inplace=True)
+        df.reset_index(drop=True, inplace=True) # Reset index after sort and drop
+
+        print(f"Data after manual entries integration and sorting: {len(df)} draws.")
+        print("Updated data preview (last 5 rows after potential manual additions):")
+        print(df.tail())
+
+        # Re-calculate date_min_str, date_max_str as they are used later for status_message
+        if 'Date' in df.columns and not df.empty:
+            date_min_str = df['Date'].min().strftime('%Y-%m-%d')
+            date_max_str = df['Date'].max().strftime('%Y-%m-%d')
+            print(f"Période couverte après ajouts manuels: {date_min_str} à {date_max_str}")
+    # --- End of Manual Data Entry Integration ---
 
     # Ajouter des caractéristiques avancées
     print("\nAjout de caractéristiques avancées...")
