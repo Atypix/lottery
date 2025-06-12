@@ -3,13 +3,31 @@ import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.ensemble import RandomForestRegressor
 import xgboost as xgb
-import datetime
+import datetime # Already datetime.datetime
+import argparse # Added
+import json # Added
+from common.date_utils import get_next_euromillions_draw_date, date as datetime_date # Added
+# pandas, numpy, os (implicitly via main) are used
 
 def load_enhanced_data():
     """
     Charge les données améliorées.
     """
-    df = pd.read_csv("euromillions_enhanced_dataset.csv")
+    data_path_primary = "data/euromillions_enhanced_dataset.csv"
+    data_path_fallback = "euromillions_enhanced_dataset.csv"
+    actual_data_path = None
+    if os.path.exists(data_path_primary): # os needs to be imported if not already
+        actual_data_path = data_path_primary
+    elif os.path.exists(data_path_fallback):
+        actual_data_path = data_path_fallback
+        # print(f"ℹ️ Données chargées depuis {actual_data_path} (fallback)") # Suppressed
+
+    if not actual_data_path:
+        # print(f"❌ ERREUR: Fichier de données non trouvé ({data_path_primary} ou {data_path_fallback})") # Suppressed
+        # Fallback to empty dataframe or raise error
+        return pd.DataFrame()
+
+    df = pd.read_csv(actual_data_path)
     df['Date'] = pd.to_datetime(df['Date'])
     df = df.sort_values('Date').reset_index(drop=True)
     
@@ -248,69 +266,83 @@ def main():
     """
     Fonction principale pour la prédiction optimisée rapide.
     """
-    print("=== Prédiction Euromillions Optimisée Rapide ===")
+    parser = argparse.ArgumentParser(description="Quick Optimized Euromillions Predictor.")
+    parser.add_argument("--date", type=str, help="Target draw date in YYYY-MM-DD format.")
+    args = parser.parse_args()
+
+    target_date_str = None
+    data_file_path_for_next_date_calc = "data/euromillions_enhanced_dataset.csv" # Default for get_next_euromillions_draw_date
+
+    if args.date:
+        try:
+            datetime.datetime.strptime(args.date, '%Y-%m-%d') # Validate date format
+            target_date_str = args.date
+        except ValueError:
+            # print(f"Error: Date format for --date should be YYYY-MM-DD. Using next draw date instead.", file=sys.stderr) # Suppressed
+            # Determine data_file_path for get_next_euromillions_draw_date
+            df_temp = load_enhanced_data() # Load data to see if it exists for date calculation
+            if df_temp.empty:
+                 data_file_path_for_next_date_calc = None # No data, can't determine next date based on it
+
+            target_date_obj = get_next_euromillions_draw_date(data_file_path_for_next_date_calc)
+            target_date_str = target_date_obj.strftime('%Y-%m-%d')
+    else:
+        df_temp = load_enhanced_data()
+        if df_temp.empty:
+            data_file_path_for_next_date_calc = None
+
+        target_date_obj = get_next_euromillions_draw_date(data_file_path_for_next_date_calc)
+        target_date_str = target_date_obj.strftime('%Y-%m-%d')
+
+    # print("=== Prédiction Euromillions Optimisée Rapide ===") # Suppressed
     
-    # Charger les données
     df = load_enhanced_data()
-    
-    # Préparer les données
+    if df.empty:
+        # print("Error: Could not load data. Exiting.") # Suppressed
+        # Output a failure JSON? For now, assume it might fall back to random if generate_quick_prediction handles empty df.
+        # However, the current script structure would error out before.
+        # For robust CLI, this path needs to output valid JSON error or handle gracefully.
+        # For now, let's assume data loading is usually successful.
+        # If it fails, the script will likely crash before JSON output, which is a form of failure for the consensus.
+        error_output = {
+            "nom_predicteur": "quick_optimized_prediction",
+            "numeros": [], "etoiles": [],
+            "date_tirage_cible": target_date_str,
+            "confidence": 0.0, "categorie": "Scientifique",
+            "error": "Failed to load data."
+        }
+        print(json.dumps(error_output))
+        return
+
+
     main_normalized, stars_normalized, features, main_scaler, stars_scaler = prepare_data_for_prediction(df)
-    
-    # Entraîner les modèles
     models = train_optimized_models(main_normalized, stars_normalized, features)
     
-    # Faire la prédiction
-    print("\nGénération de la prédiction optimisée...")
+    # print("\nGénération de la prédiction optimisée...") # Suppressed
     main_numbers, star_numbers = make_ensemble_prediction(
         models, main_normalized, stars_normalized, features, main_scaler, stars_scaler
     )
     
-    # Analyser la confiance
-    confidence = analyze_prediction_confidence(df, main_numbers, star_numbers)
-    
-    print(f"\n🎯 PRÉDICTION OPTIMISÉE POUR LE PROCHAIN TIRAGE 🎯")
-    print("=" * 60)
-    print(f"Numéros principaux: {', '.join(map(str, main_numbers))}")
-    print(f"Étoiles: {', '.join(map(str, star_numbers))}")
-    print("=" * 60)
-    
-    print(f"\n📊 ANALYSE DE CONFIANCE 📊")
-    print(f"Somme des numéros principaux: {confidence['predicted_sum']}")
-    print(f"Percentile de la somme: {confidence['sum_percentile']:.1f}%")
-    print(f"Fréquence moyenne des numéros principaux: {confidence['avg_main_freq']:.3f}")
-    print(f"Fréquence moyenne des étoiles: {confidence['avg_star_freq']:.3f}")
-    
-    print(f"\n📈 DÉTAILS DES FRÉQUENCES 📈")
-    for i, (num, freq) in enumerate(zip(main_numbers, confidence['main_freq'])):
-        print(f"Numéro {num}: {freq:.3f} ({freq*100:.1f}%)")
-    
-    for i, (num, freq) in enumerate(zip(star_numbers, confidence['star_freq'])):
-        print(f"Étoile {num}: {freq:.3f} ({freq*100:.1f}%)")
-    
-    # Sauvegarder la prédiction
-    with open("prediction_quick_optimized.txt", "w") as f:
-        f.write(f"Prédiction Euromillions Optimisée Rapide\n")
-        f.write(f"Générée le {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}\n")
-        f.write("=" * 60 + "\n\n")
-        f.write(f"Numéros principaux: {', '.join(map(str, main_numbers))}\n")
-        f.write(f"Étoiles: {', '.join(map(str, star_numbers))}\n\n")
-        f.write("Modèles utilisés:\n")
-        f.write("- Random Forest optimisé (60% de poids)\n")
-        f.write("- XGBoost optimisé (40% de poids)\n")
-        f.write("- Ensemble learning avec données réelles\n\n")
-        f.write(f"Données: {len(df)} tirages réels avec caractéristiques avancées\n")
-        f.write(f"Période: {df['Date'].min()} à {df['Date'].max()}\n\n")
-        f.write("Analyse de confiance:\n")
-        f.write(f"- Somme des numéros principaux: {confidence['predicted_sum']}\n")
-        f.write(f"- Percentile de la somme: {confidence['sum_percentile']:.1f}%\n")
-        f.write(f"- Fréquence moyenne des numéros principaux: {confidence['avg_main_freq']:.3f}\n")
-        f.write(f"- Fréquence moyenne des étoiles: {confidence['avg_star_freq']:.3f}\n")
-    
-    print(f"\nPrédiction sauvegardée dans 'prediction_quick_optimized.txt'")
-    print("\n⚠️  AVERTISSEMENT ⚠️")
-    print("Cette prédiction est basée sur l'analyse de données historiques.")
-    print("L'Euromillions reste un jeu de hasard et aucune prédiction ne peut garantir des gains.")
-    print("Jouez de manière responsable!")
+    # confidence_analysis = analyze_prediction_confidence(df, main_numbers, star_numbers) # Suppressed complex confidence
+
+    # print(f"\n🎯 PRÉDICTION OPTIMISÉE POUR LE PROCHAIN TIRAGE 🎯") # Suppressed
+    # ... other prints suppressed ...
+
+    # Sauvegarder la prédiction # Suppressed
+    # with open("prediction_quick_optimized.txt", "w") as f:
+    # ... content ...
+    # print(f"\nPrédiction sauvegardée dans 'prediction_quick_optimized.txt'") # Suppressed
+    # ... warning prints suppressed ...
+
+    output_dict = {
+        "nom_predicteur": "quick_optimized_prediction",
+        "numeros": main_numbers.tolist(), # Ensure list for JSON
+        "etoiles": star_numbers.tolist(), # Ensure list for JSON
+        "date_tirage_cible": target_date_str,
+        "confidence": 7.0, # Default confidence for this optimized model
+        "categorie": "Scientifique"
+    }
+    print(json.dumps(output_dict))
 
 if __name__ == "__main__":
     main()

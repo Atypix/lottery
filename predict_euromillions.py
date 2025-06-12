@@ -6,11 +6,14 @@ Script pour prédire les numéros de l'Euromillions en utilisant un modèle Tens
 import os
 import sys
 import argparse
-import tensorflow as tf
+# import tensorflow as tf # Keep for load_model, comment out if not directly used
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
-import datetime
+import datetime # Already datetime.datetime
+from common.date_utils import get_next_euromillions_draw_date, date as datetime_date # Added
+import json # Added
+# os, sys, argparse are already imported
 
 def load_models(models_dir):
     """
@@ -137,7 +140,8 @@ def main():
     parser = argparse.ArgumentParser(description="Prédire les numéros de l'Euromillions")
     parser.add_argument("--data", default="data/euromillions_dataset.csv", help="Chemin vers le fichier CSV des données")
     parser.add_argument("--models-dir", default="models", help="Répertoire contenant les modèles")
-    parser.add_argument("--output", default="prediction.txt", help="Fichier de sortie pour la prédiction")
+    # parser.add_argument("--output", default="prediction.txt", help="Fichier de sortie pour la prédiction") # Commented out
+    parser.add_argument("--date", type=str, help="Target draw date in YYYY-MM-DD format.") # Added
     args = parser.parse_args()
     
     # Vérifier si les fichiers et répertoires existent
@@ -173,18 +177,40 @@ def main():
         main_model, stars_model, X_main_last, X_stars_last, main_scaler, stars_scaler
     )
     
-    # Afficher les résultats
-    print("\nPrédiction pour le prochain tirage de l'Euromillions :")
-    print(f"Numéros principaux : {', '.join(map(str, main_numbers))}")
-    print(f"Étoiles : {', '.join(map(str, star_numbers))}")
-    
-    # Sauvegarder la prédiction dans un fichier
-    with open(args.output, "w") as f:
-        f.write(f"Prédiction pour le prochain tirage de l'Euromillions (générée le {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}):\n")
-        f.write(f"Numéros principaux : {', '.join(map(str, main_numbers))}\n")
-        f.write(f"Étoiles : {', '.join(map(str, star_numbers))}\n")
-    
-    print(f"\nLa prédiction a été sauvegardée dans le fichier '{args.output}'.")
+    # Afficher les résultats # Commented out
+    # print("\nPrédiction pour le prochain tirage de l'Euromillions :")
+    # print(f"Numéros principaux : {', '.join(map(str, main_numbers))}")
+    # print(f"Étoiles : {', '.join(map(str, star_numbers))}")
+
+    # Sauvegarder la prédiction dans un fichier # Commented out
+    # with open(args.output, "w") as f:
+    #     f.write(f"Prédiction pour le prochain tirage de l'Euromillions (générée le {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}):\n")
+    #     f.write(f"Numéros principaux : {', '.join(map(str, main_numbers))}\n")
+    #     f.write(f"Étoiles : {', '.join(map(str, star_numbers))}\n")
+    # print(f"\nLa prédiction a été sauvegardée dans le fichier '{args.output}'.")
+
+    target_date_str = None
+    if args.date:
+        try:
+            datetime.datetime.strptime(args.date, '%Y-%m-%d') # Validate
+            target_date_str = args.date
+        except ValueError:
+            # print(f"Warning: Invalid date format for --date {args.date}. Using next logical date.", file=sys.stderr) # Suppressed
+            target_date_obj = get_next_euromillions_draw_date(actual_data_path)
+            target_date_str = target_date_obj.strftime('%Y-%m-%d')
+    else:
+        target_date_obj = get_next_euromillions_draw_date(actual_data_path)
+        target_date_str = target_date_obj.strftime('%Y-%m-%d')
+
+    output_dict = {
+        "nom_predicteur": "predict_euromillions",
+        "numeros": main_numbers.tolist(), # Ensure it's a list
+        "etoiles": star_numbers.tolist(), # Ensure it's a list
+        "date_tirage_cible": target_date_str,
+        "confidence": 6.0, # Default confidence for TF model
+        "categorie": "Scientifique"
+    }
+    print(json.dumps(output_dict))
 
 if __name__ == "__main__":
     main()

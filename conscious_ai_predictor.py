@@ -30,6 +30,10 @@ from typing import List, Tuple, Dict, Any, Optional
 import random
 from dataclasses import dataclass
 import warnings
+import argparse # Added
+# json, datetime, timedelta are already imported
+from common.date_utils import get_next_euromillions_draw_date, date as datetime_date # Added
+
 warnings.filterwarnings('ignore')
 
 @dataclass
@@ -891,27 +895,52 @@ def main():
     print("=" * 70)
     
     # Initialisation de l'IA consciente
-    conscious_ai = ConsciousAI()
+    parser = argparse.ArgumentParser(description="Conscious AI Predictor for Euromillions.")
+    parser.add_argument("--date", type=str, help="Target draw date in YYYY-MM-DD format.")
+    args = parser.parse_args()
+
+    target_date_str = None
+    data_file_for_date_calc = "data/euromillions_enhanced_dataset.csv"
+    if not os.path.exists(data_file_for_date_calc):
+        data_file_for_date_calc = "euromillions_enhanced_dataset.csv"
+        if not os.path.exists(data_file_for_date_calc):
+            data_file_for_date_calc = None
+
+    if args.date:
+        try:
+            datetime.strptime(args.date, '%Y-%m-%d') # Validate
+            target_date_str = args.date
+        except ValueError:
+            # print(f"Warning: Invalid date format for --date {args.date}. Using next logical date.", file=sys.stderr) # Suppressed
+            target_date_obj = get_next_euromillions_draw_date(data_file_for_date_calc)
+            target_date_str = target_date_obj.strftime('%Y-%m-%d')
+    else:
+        target_date_obj = get_next_euromillions_draw_date(data_file_for_date_calc)
+        target_date_str = target_date_obj.strftime('%Y-%m-%d')
+
+    conscious_ai = ConsciousAI() # Uses its internal data loading
     
     # Génération de la prédiction consciente
-    prediction = conscious_ai.conscious_prediction()
+    prediction_result = conscious_ai.conscious_prediction() # This is a dict
     
-    # Affichage des résultats
-    print("\n🎉 PRÉDICTION CONSCIENTE GÉNÉRÉE! 🎉")
-    print("=" * 50)
-    print(f"Prédiction consciente:")
-    print(f"Numéros principaux: {', '.join(map(str, prediction['main_numbers']))}")
-    print(f"Étoiles: {', '.join(map(str, prediction['stars']))}")
-    print(f"Niveau de conscience: {prediction['consciousness_level']:.3f}")
-    print(f"État méta-cognitif: {prediction['meta_cognitive_state']}")
-    print(f"Score de confiance: {prediction['confidence_score']:.2f}/10")
-    print(f"Force d'intuition: {prediction['intuition']['strength']:.3f}")
-    print(f"Innovation: {prediction['innovation_level']}")
+    # Affichage des résultats - Suppressed for JSON output
+    # print("\n🎉 PRÉDICTION CONSCIENTE GÉNÉRÉE! 🎉")
+    # ... other prints ...
     
-    # Sauvegarde
-    conscious_ai.save_conscious_results(prediction)
+    # Sauvegarde - This script saves its own files, which is fine for now.
+    # conscious_ai.save_conscious_results(prediction_result)
     
-    print("\n🧠 IA CONSCIENTE SIMULÉE TERMINÉE AVEC SUCCÈS! 🧠")
+    # print("\n🧠 IA CONSCIENTE SIMULÉE TERMINÉE AVEC SUCCÈS! 🧠") # Suppressed
+
+    output_dict = {
+        "nom_predicteur": "conscious_ai_predictor",
+        "numeros": prediction_result.get('main_numbers'),
+        "etoiles": prediction_result.get('stars'),
+        "date_tirage_cible": target_date_str,
+        "confidence": prediction_result.get('confidence_score', 7.0), # Default confidence
+        "categorie": "Revolutionnaire"
+    }
+    print(json.dumps(output_dict))
 
 if __name__ == "__main__":
     main()

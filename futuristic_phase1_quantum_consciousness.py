@@ -17,12 +17,16 @@ import pandas as pd
 import numpy as np
 import json
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date as datetime_date # Added datetime_date
 from typing import Dict, List, Tuple, Any
-import matplotlib.pyplot as plt
-import seaborn as sns
+# import matplotlib.pyplot as plt # Commented for CLI
+# import seaborn as sns # Commented for CLI
 from collections import Counter, defaultdict
 import warnings
+import argparse # Added
+import json # Added
+from common.date_utils import get_next_euromillions_draw_date # Added
+
 warnings.filterwarnings('ignore')
 
 # Imports pour technologies futuristes
@@ -66,13 +70,13 @@ class QuantumAIPredictor:
         """
         Configure l'environnement futuriste.
         """
-        print("🔮 Configuration de l'environnement futuriste...")
+        # print("🔮 Configuration de l'environnement futuriste...") # Suppressed
         
         # Création des répertoires futuristes
-        os.makedirs('/home/ubuntu/results/futuristic_phase1', exist_ok=True)
-        os.makedirs('/home/ubuntu/results/futuristic_phase1/quantum', exist_ok=True)
-        os.makedirs('/home/ubuntu/results/futuristic_phase1/consciousness', exist_ok=True)
-        os.makedirs('/home/ubuntu/results/futuristic_phase1/evolution', exist_ok=True)
+        os.makedirs('results/futuristic_phase1', exist_ok=True)
+        os.makedirs('results/futuristic_phase1/quantum', exist_ok=True)
+        os.makedirs('results/futuristic_phase1/consciousness', exist_ok=True)
+        os.makedirs('results/futuristic_phase1/evolution', exist_ok=True)
         
         # Paramètres futuristes
         self.quantum_params = {
@@ -99,15 +103,31 @@ class QuantumAIPredictor:
         """
         Charge et prépare les données pour traitement quantique.
         """
-        print("📊 Chargement des données quantiques...")
+        # print("📊 Chargement des données quantiques...") # Suppressed
         
         # Données Euromillions
-        try:
-            self.df = pd.read_csv('/home/ubuntu/euromillions_enhanced_dataset.csv')
-            print(f"✅ Données Euromillions: {len(self.df)} tirages")
-        except:
-            print("❌ Erreur chargement données")
-            return
+        data_path_primary = 'data/euromillions_enhanced_dataset.csv'
+        data_path_fallback = 'euromillions_enhanced_dataset.csv'
+        actual_data_path = None
+
+        if os.path.exists(data_path_primary):
+            actual_data_path = data_path_primary
+        elif os.path.exists(data_path_fallback):
+            actual_data_path = data_path_fallback
+            # print(f"ℹ️ Données Euromillions chargées depuis {actual_data_path} (fallback)") # Suppressed
+
+        if actual_data_path:
+            try:
+                self.df = pd.read_csv(actual_data_path)
+                # print(f"✅ Données Euromillions: {len(self.df)} tirages") # Suppressed
+            except Exception as e:
+                # print(f"❌ Erreur chargement données Euromillions depuis {actual_data_path}: {e}") # Suppressed
+                self.df = pd.DataFrame() # Fallback
+                if self.df.empty: raise FileNotFoundError("Dataset not found.")
+        else:
+            # print(f"❌ ERREUR: Fichier de données Euromillions non trouvé ({data_path_primary} ou {data_path_fallback})") # Suppressed
+            self.df = pd.DataFrame() # Fallback
+            if self.df.empty: raise FileNotFoundError("Dataset not found.")
             
         # Préparation quantique des données
         self.quantum_data = self.prepare_quantum_data()
@@ -1817,9 +1837,46 @@ Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         print("✅ Résultats futuristes sauvegardés!")
 
 if __name__ == "__main__":
-    # Lancement de la Phase Futuriste 1
+    parser = argparse.ArgumentParser(description="Futuristic Phase 1 Quantum Consciousness Predictor.")
+    parser.add_argument("--date", type=str, help="Target draw date in YYYY-MM-DD format.")
+    args = parser.parse_args()
+
+    target_date_str = None
+    data_file_for_date_calc = "data/euromillions_enhanced_dataset.csv"
+    if not os.path.exists(data_file_for_date_calc):
+        data_file_for_date_calc = "euromillions_enhanced_dataset.csv"
+        if not os.path.exists(data_file_for_date_calc):
+            data_file_for_date_calc = None # Will use current date if no data file
+
+    if args.date:
+        try:
+            datetime.strptime(args.date, '%Y-%m-%d') # Validate
+            target_date_str = args.date
+        except ValueError:
+            # print(f"Warning: Invalid date format for --date {args.date}. Using next logical date.", file=sys.stderr) # Suppressed
+            target_date_obj = get_next_euromillions_draw_date(data_file_for_date_calc)
+            target_date_str = target_date_obj.strftime('%Y-%m-%d')
+    else:
+        target_date_obj = get_next_euromillions_draw_date(data_file_for_date_calc)
+        target_date_str = target_date_obj.strftime('%Y-%m-%d')
+
     quantum_ai = QuantumAIPredictor()
-    futuristic_results = quantum_ai.run_futuristic_phase1()
+    prediction_result = quantum_ai.run_futuristic_phase1() # This is futuristic_fusion
     
-    print("\n🎉 MISSION FUTURISTE 1: ACCOMPLIE! 🎉")
+    # print("\n🎉 MISSION FUTURISTE 1: ACCOMPLIE! 🎉") # Suppressed
+
+    confidence_value = prediction_result.get('futuristic_score', 0) # Scale 0-15
+    # Normalize confidence to 0-10, providing a default if key is missing or not a number
+    normalized_confidence = min(10.0, (confidence_value / 15.0) * 10.0) if isinstance(confidence_value, (int, float)) else 7.5
+
+
+    output_dict = {
+        "nom_predicteur": "futuristic_phase1_quantum_consciousness",
+        "numeros": prediction_result.get('numbers'),
+        "etoiles": prediction_result.get('stars'),
+        "date_tirage_cible": target_date_str,
+        "confidence": normalized_confidence,
+        "categorie": "Revolutionnaire"
+    }
+    print(json.dumps(output_dict))
 

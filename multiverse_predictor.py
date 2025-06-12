@@ -27,8 +27,13 @@ from typing import List, Tuple, Dict, Any, Optional
 import random
 from dataclasses import dataclass
 import itertools
-from concurrent.futures import ThreadPoolExecutor
+# from concurrent.futures import ThreadPoolExecutor # Not used in main path for CLI
 import warnings
+import argparse # Added
+import json # Added
+from common.date_utils import get_next_euromillions_draw_date, date as datetime_date # Added
+# datetime, pd, np already imported
+
 warnings.filterwarnings('ignore')
 
 @dataclass
@@ -901,27 +906,47 @@ def main():
     print("=" * 70)
     
     # Initialisation du prédicteur multivers
-    multiverse_predictor = MultiversePredictor()
+    parser = argparse.ArgumentParser(description="Multiverse Predictor for Euromillions.")
+    parser.add_argument("--date", type=str, help="Target draw date in YYYY-MM-DD format.")
+    args = parser.parse_args()
+
+    target_date_str = None
+    data_file_for_date_calc = "data/euromillions_enhanced_dataset.csv"
+    if not os.path.exists(data_file_for_date_calc):
+        data_file_for_date_calc = "euromillions_enhanced_dataset.csv"
+        if not os.path.exists(data_file_for_date_calc):
+            data_file_for_date_calc = None
+
+    if args.date:
+        try:
+            datetime.strptime(args.date, '%Y-%m-%d') # Validate
+            target_date_str = args.date
+        except ValueError:
+            target_date_obj = get_next_euromillions_draw_date(data_file_for_date_calc)
+            target_date_str = target_date_obj.strftime('%Y-%m-%d')
+    else:
+        target_date_obj = get_next_euromillions_draw_date(data_file_for_date_calc)
+        target_date_str = target_date_obj.strftime('%Y-%m-%d')
+
+    multiverse_predictor = MultiversePredictor() # Uses internal data loading
     
-    # Génération de la prédiction multivers
-    prediction = multiverse_predictor.multiverse_prediction()
+    prediction_result = multiverse_predictor.multiverse_prediction()
     
-    # Affichage des résultats
-    print("\n🎉 CONSENSUS MULTIVERS GÉNÉRÉ! 🎉")
-    print("=" * 50)
-    print(f"Consensus multivers:")
-    print(f"Numéros principaux: {', '.join(map(str, prediction['main_numbers']))}")
-    print(f"Étoiles: {', '.join(map(str, prediction['stars']))}")
-    print(f"Force du consensus: {prediction['consensus_strength']:.3f}")
-    print(f"Cohérence dimensionnelle: {prediction['dimensional_coherence']:.3f}")
-    print(f"Score de confiance: {prediction['confidence_score']:.2f}/10")
-    print(f"Univers simulés: {prediction['multiverse_metrics']['total_universes']}")
-    print(f"Innovation: {prediction['innovation_level']}")
-    
-    # Sauvegarde
-    multiverse_predictor.save_multiverse_results(prediction)
-    
-    print("\n🌌 MULTIVERS PARALLÈLES TERMINÉ AVEC SUCCÈS! 🌌")
+    # Suppress original prints
+    # print("\n🎉 CONSENSUS MULTIVERS GÉNÉRÉ! 🎉")
+    # ... other prints ...
+    # multiverse_predictor.save_multiverse_results(prediction_result) # Keep internal file saving if desired
+    # print("\n🌌 MULTIVERS PARALLÈLES TERMINÉ AVEC SUCCÈS! 🌌")
+
+    output_dict = {
+        "nom_predicteur": "multiverse_predictor",
+        "numeros": prediction_result.get('main_numbers'),
+        "etoiles": prediction_result.get('stars'),
+        "date_tirage_cible": target_date_str,
+        "confidence": prediction_result.get('confidence_score', 7.0), # Default
+        "categorie": "Revolutionnaire"
+    }
+    print(json.dumps(output_dict))
 
 if __name__ == "__main__":
     main()

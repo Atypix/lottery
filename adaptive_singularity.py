@@ -20,9 +20,13 @@ import pandas as pd
 import numpy as np
 import json
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date as datetime_date # Added datetime_date
 from typing import Dict, List, Tuple, Any
 import warnings
+import argparse # Added
+import json # Added
+from common.date_utils import get_next_euromillions_draw_date # Added
+
 warnings.filterwarnings('ignore')
 
 class AdaptiveSingularity:
@@ -30,22 +34,34 @@ class AdaptiveSingularity:
     Singularité technologique adaptée pour la validation rétroactive.
     """
     
-    def __init__(self, data_path: str = "euromillions_enhanced_dataset.csv"):
+    def __init__(self, data_path: str = "data/euromillions_enhanced_dataset.csv"): # Added data/ prefix
         """
         Initialise la singularité adaptée.
         """
-        print("🌟 SINGULARITÉ TECHNOLOGIQUE ADAPTÉE 🌟")
-        print("=" * 60)
-        print("Version optimisée pour validation rétroactive")
-        print("avec analyse des tendances et patterns récents")
-        print("=" * 60)
+        # Suppress prints for CLI integration
+        # print("🌟 SINGULARITÉ TECHNOLOGIQUE ADAPTÉE 🌟")
+        # print("=" * 60)
+        # print("Version optimisée pour validation rétroactive")
+        # print("avec analyse des tendances et patterns récents")
+        # print("=" * 60)
         
         # Chargement des données
-        if os.path.exists(data_path):
-            self.df = pd.read_csv(data_path)
-            print(f"✅ Données chargées: {len(self.df)} tirages")
+        data_path_primary = data_path
+        data_path_fallback = "euromillions_enhanced_dataset.csv"
+        actual_data_path_to_load = None
+
+        if os.path.exists(data_path_primary):
+            actual_data_path_to_load = data_path_primary
+        elif os.path.exists(data_path_fallback):
+            actual_data_path_to_load = data_path_fallback
+            # print(f"ℹ️ Données chargées depuis {actual_data_path_to_load} (fallback)") # Suppressed
+
+        if actual_data_path_to_load:
+            self.df = pd.read_csv(actual_data_path_to_load)
+            # print(f"✅ Données chargées: {len(self.df)} tirages") # Suppressed
         else:
-            raise FileNotFoundError(f"Fichier non trouvé: {data_path}")
+            # This script is more critical if data is missing, so raising error is fine.
+            raise FileNotFoundError(f"Fichier de données non trouvé: {data_path_primary} ou {data_path_fallback}")
         
         # Conversion de la colonne date
         self.df['Date'] = pd.to_datetime(self.df['Date'])
@@ -570,23 +586,61 @@ def main():
     print("=" * 60)
     
     # Initialisation de la singularité adaptée
-    adaptive_singularity = AdaptiveSingularity()
+    # Determine target_date_str for output JSON
+    parser = argparse.ArgumentParser(description="Adaptive Singularity Predictor for Euromillions.")
+    parser.add_argument("--date", type=str, help="Target draw date in YYYY-MM-DD format.")
+    args = parser.parse_args()
+
+    target_date_str = None
+    # This script's internal logic doesn't directly use a single target date for prediction generation,
+    # but the output format requires one.
+    # We'll use the provided --date or the next logical date from its dataset.
+    # The script itself loads 'data/euromillions_enhanced_dataset.csv' or 'euromillions_enhanced_dataset.csv'
+    # So, we pass one of these to get_next_euromillions_draw_date.
+    data_file_for_date_calc = "data/euromillions_enhanced_dataset.csv"
+    if not os.path.exists(data_file_for_date_calc):
+        data_file_for_date_calc = "euromillions_enhanced_dataset.csv" # Fallback for date calculation
+        if not os.path.exists(data_file_for_date_calc):
+            data_file_for_date_calc = None # Will use current date if no data file
+
+    if args.date:
+        try:
+            datetime.strptime(args.date, '%Y-%m-%d') # Validate
+            target_date_str = args.date
+        except ValueError:
+            # print(f"Warning: Invalid date format for --date {args.date}. Using next logical date.", file=sys.stderr) # Suppressed
+            target_date_obj = get_next_euromillions_draw_date(data_file_for_date_calc)
+            target_date_str = target_date_obj.strftime('%Y-%m-%d')
+    else:
+        target_date_obj = get_next_euromillions_draw_date(data_file_for_date_calc)
+        target_date_str = target_date_obj.strftime('%Y-%m-%d')
+
+
+    adaptive_singularity = AdaptiveSingularity() # Uses its internal data loading
     
-    # Génération de la prédiction adaptée
-    prediction = adaptive_singularity.adaptive_prediction()
+    prediction_result = adaptive_singularity.adaptive_prediction() # This is a dict
     
-    # Affichage des résultats
-    print("\n🎉 PRÉDICTION ADAPTÉE GÉNÉRÉE! 🎉")
-    print("=" * 40)
-    print(f"Numéros principaux: {', '.join(map(str, prediction['main_numbers']))}")
-    print(f"Étoiles: {', '.join(map(str, prediction['stars']))}")
-    print(f"Score de confiance: {prediction['confidence_score']:.2f}/10")
-    print(f"Innovation: {prediction['innovation_level']}")
+    # print("\n🎉 PRÉDICTION ADAPTÉE GÉNÉRÉE! 🎉") # Suppressed
+    # print("=" * 40) # Suppressed
+    # print(f"Numéros principaux: {', '.join(map(str, prediction_result['main_numbers']))}") # Suppressed
+    # print(f"Étoiles: {', '.join(map(str, prediction_result['stars']))}") # Suppressed
+    # print(f"Score de confiance: {prediction_result['confidence_score']:.2f}/10") # Suppressed
+    # print(f"Innovation: {prediction_result['innovation_level']}") # Suppressed
     
-    # Sauvegarde
-    adaptive_singularity.save_adaptive_results(prediction)
+    # Sauvegarde - this script saves its own files, which is fine.
+    # adaptive_singularity.save_adaptive_results(prediction_result) # This can remain if needed, but not for stdout
     
-    print("\n🌟 SINGULARITÉ ADAPTÉE TERMINÉE AVEC SUCCÈS! 🌟")
+    # print("\n🌟 SINGULARITÉ ADAPTÉE TERMINÉE AVEC SUCCÈS! 🌟") # Suppressed
+
+    output_dict = {
+        "nom_predicteur": "adaptive_singularity",
+        "numeros": prediction_result.get('main_numbers'),
+        "etoiles": prediction_result.get('stars'),
+        "date_tirage_cible": target_date_str,
+        "confidence": prediction_result.get('confidence_score', 7.5), # Default from its typical range
+        "categorie": "Revolutionnaire"
+    }
+    print(json.dumps(output_dict))
 
 if __name__ == "__main__":
     main()

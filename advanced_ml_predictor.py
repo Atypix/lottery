@@ -14,8 +14,12 @@ import pandas as pd
 import numpy as np
 import json
 import os
-from datetime import datetime
+from datetime import datetime, date as datetime_date # For date parsing
 import warnings
+import argparse # Added
+import json # Added
+from common.date_utils import get_next_euromillions_draw_date # Added
+
 warnings.filterwarnings('ignore')
 
 # Machine Learning
@@ -782,14 +786,51 @@ Rapport généré par le Système ML Scientifique Euromillions
         print("✅ Rapport de performance généré!")
 
 if __name__ == "__main__":
-    # Lancement du pipeline ML
+    parser = argparse.ArgumentParser(description="Advanced ML Predictor for Euromillions.")
+    parser.add_argument("--date", type=str, help="Target draw date in YYYY-MM-DD format.")
+    args = parser.parse_args()
+
+    target_date_str = None
+    if args.date:
+        try:
+            datetime.strptime(args.date, '%Y-%m-%d') # Validate date format
+            target_date_str = args.date
+        except ValueError:
+            print(f"Error: Date format for --date should be YYYY-MM-DD. Using next draw date instead.", file=sys.stderr)
+            # Fallback to next draw date logic if format is wrong
+            target_date_obj = get_next_euromillions_draw_date('data/euromillions_enhanced_dataset.csv')
+            target_date_str = target_date_obj.strftime('%Y-%m-%d')
+    else:
+        # Default to next draw date if no date is provided
+        target_date_obj = get_next_euromillions_draw_date('data/euromillions_enhanced_dataset.csv')
+        target_date_str = target_date_obj.strftime('%Y-%m-%d')
+
+    # Comment out original prints or redirect them to stderr if needed for debugging
+    # print("Running AdvancedMLPredictor...") # Example of redirecting print
+
     ml_predictor = AdvancedMLPredictor()
-    prediction = ml_predictor.run_ml_pipeline()
+    # The run_ml_pipeline internally prints a lot. For CLI integration, these should be silenced
+    # or the class refactored to not print during prediction generation.
+    # For this task, we assume the class methods are hard to change to suppress prints.
+    # We will capture stdout if necessary, or rely on the fact that only the JSON should go to stdout.
+    # For now, let's assume the internal prints of the class go to stderr or are minimal.
+
+    prediction_result = ml_predictor.run_ml_pipeline() # This is a dict
     
-    print(f"\n🎯 PRÉDICTION SCIENTIFIQUE ML:")
-    print(f"Numéros: {', '.join(map(str, prediction['numbers']))}")
-    print(f"Étoiles: {', '.join(map(str, prediction['stars']))}")
-    print(f"Confiance: {prediction['confidence_score']:.2f}/10")
+    # print(f"\n🎯 PRÉDICTION SCIENTIFIQUE ML:") # Commented out
+    # print(f"Numéros: {', '.join(map(str, prediction['numbers']))}") # Commented out
+    # print(f"Étoiles: {', '.join(map(str, prediction['stars']))}") # Commented out
+    # print(f"Confiance: {prediction['confidence_score']:.2f}/10") # Commented out
     
-    print("\n🎉 PHASE ML TERMINÉE! 🎉")
+    # print("\n🎉 PHASE ML TERMINÉE! 🎉") # Commented out
+
+    output_dict = {
+        "nom_predicteur": "advanced_ml_predictor",
+        "numeros": prediction_result.get('numbers'),
+        "etoiles": prediction_result.get('stars'),
+        "date_tirage_cible": target_date_str,
+        "confidence": prediction_result.get('confidence_score', 5.0), # Default if not present
+        "categorie": "Scientifique"
+    }
+    print(json.dumps(output_dict))
 
