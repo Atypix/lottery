@@ -14,8 +14,12 @@ import pandas as pd
 import numpy as np
 import json
 import os
-from datetime import datetime
+from datetime import datetime, date as datetime_date # Added datetime_date
 import warnings
+import argparse # Added
+import json # Added
+from common.date_utils import get_next_euromillions_draw_date # Added
+
 warnings.filterwarnings('ignore')
 
 # Machine Learning
@@ -47,7 +51,7 @@ class OptimizedScientificPredictor:
         
     def setup_environment(self):
         """Configure l'environnement."""
-        os.makedirs('/home/ubuntu/results/scientific/optimized', exist_ok=True)
+        os.makedirs('results/scientific/optimized', exist_ok=True)
         
         self.config = {
             'random_state': 42,
@@ -60,11 +64,31 @@ class OptimizedScientificPredictor:
         """Charge les données."""
         print("📊 Chargement des données...")
         
-        self.df = pd.read_csv('/home/ubuntu/euromillions_enhanced_dataset.csv')
-        
+        data_path_primary = 'data/euromillions_enhanced_dataset.csv'
+        data_path_fallback = 'euromillions_enhanced_dataset.csv'
+        actual_data_path = None
+        if os.path.exists(data_path_primary):
+            actual_data_path = data_path_primary
+        elif os.path.exists(data_path_fallback):
+            actual_data_path = data_path_fallback
+            print(f"ℹ️ Données chargées depuis {actual_data_path} (fallback)")
+
+        if actual_data_path:
+            self.df = pd.read_csv(actual_data_path)
+        else:
+            print(f"❌ ERREUR: Fichier de données non trouvé ({data_path_primary} ou {data_path_fallback})")
+            self.df = pd.DataFrame() # Fallback
+            if self.df.empty:
+                raise FileNotFoundError("Dataset not found, cannot proceed.")
+
         # Chargement des résultats statistiques
-        with open('/home/ubuntu/results/scientific/analysis/statistical_analysis.json', 'r') as f:
-            self.statistical_results = json.load(f)
+        stat_results_path = 'results/scientific/analysis/statistical_analysis.json'
+        try:
+            with open(stat_results_path, 'r') as f:
+                self.statistical_results = json.load(f)
+        except FileNotFoundError:
+            print(f"❌ Fichier de résultats statistiques non trouvé: {stat_results_path}")
+            self.statistical_results = {} # Fallback to empty
         
         self.reference_draw = {
             'numbers': [20, 21, 29, 30, 35],
@@ -424,7 +448,7 @@ class OptimizedScientificPredictor:
             'timestamp': datetime.now().isoformat()
         }
         
-        with open('/home/ubuntu/results/scientific/optimized/scientific_prediction.json', 'w') as f:
+        with open('results/scientific/optimized/scientific_prediction.json', 'w') as f:
             json.dump(results, f, indent=2, default=str)
         
         # Ticket de prédiction
@@ -468,7 +492,7 @@ class OptimizedScientificPredictor:
 🎯 BONNE CHANCE AVEC CETTE PRÉDICTION SCIENTIFIQUE ! 🎯
 """
         
-        with open('/home/ubuntu/results/scientific/optimized/ticket_scientifique.txt', 'w') as f:
+        with open('results/scientific/optimized/ticket_scientifique.txt', 'w') as f:
             f.write(ticket)
         
         print("✅ Résultats sauvegardés!")
@@ -494,16 +518,45 @@ class OptimizedScientificPredictor:
         return prediction
 
 if __name__ == "__main__":
-    # Lancement de l'analyse optimisée
+    parser = argparse.ArgumentParser(description="Optimized Scientific Predictor for Euromillions.")
+    parser.add_argument("--date", type=str, help="Target draw date in YYYY-MM-DD format.")
+    args = parser.parse_args()
+
+    target_date_str = None
+    if args.date:
+        try:
+            datetime.strptime(args.date, '%Y-%m-%d') # Validate date format
+            target_date_str = args.date
+        except ValueError:
+            print(f"Error: Date format for --date should be YYYY-MM-DD. Using next draw date instead.", file=sys.stderr)
+            target_date_obj = get_next_euromillions_draw_date('data/euromillions_enhanced_dataset.csv')
+            target_date_str = target_date_obj.strftime('%Y-%m-%d')
+    else:
+        target_date_obj = get_next_euromillions_draw_date('data/euromillions_enhanced_dataset.csv')
+        target_date_str = target_date_obj.strftime('%Y-%m-%d')
+
+    # Suppress internal prints from the class for cleaner JSON output
+    # Actual suppression might require modifying the class or capturing stdout/stderr
+
     predictor = OptimizedScientificPredictor()
-    prediction = predictor.run_complete_analysis()
+    prediction_result = predictor.run_complete_analysis() # This is a dict
     
-    print(f"\n🎯 PRÉDICTION SCIENTIFIQUE FINALE:")
-    print(f"Numéros: {', '.join(map(str, prediction['numbers']))}")
-    print(f"Étoiles: {', '.join(map(str, prediction['stars']))}")
-    print(f"Confiance: {prediction['confidence_score']:.2f}/10")
-    print(f"Validation: {prediction['validation_score']['validation_percentage']:.1f}%")
-    print(f"Correspondances: {prediction['validation_score']['total_matches']}/7")
+    # print(f"\n🎯 PRÉDICTION SCIENTIFIQUE FINALE:") # Commented out
+    # print(f"Numéros: {', '.join(map(str, prediction_result['numbers']))}") # Commented out
+    # print(f"Étoiles: {', '.join(map(str, prediction_result['stars']))}") # Commented out
+    # print(f"Confiance: {prediction_result['confidence_score']:.2f}/10") # Commented out
+    # print(f"Validation: {prediction_result['validation_score']['validation_percentage']:.1f}%") # Commented out
+    # print(f"Correspondances: {prediction_result['validation_score']['total_matches']}/7") # Commented out
     
-    print("\n🎉 SYSTÈME SCIENTIFIQUE OPTIMISÉ TERMINÉ! 🎉")
+    # print("\n🎉 SYSTÈME SCIENTIFIQUE OPTIMISÉ TERMINÉ! 🎉") # Commented out
+
+    output_dict = {
+        "nom_predicteur": "optimized_scientific_predictor",
+        "numeros": prediction_result.get('numbers'),
+        "etoiles": prediction_result.get('stars'),
+        "date_tirage_cible": target_date_str, # Using the determined target_date_str
+        "confidence": prediction_result.get('confidence_score', 5.0), # Default if not present
+        "categorie": "Scientifique"
+    }
+    print(json.dumps(output_dict))
 

@@ -13,9 +13,13 @@ import pandas as pd
 import numpy as np
 import json
 import os
-from datetime import datetime
+from datetime import datetime, date as datetime_date # Added datetime_date
 from collections import defaultdict
 import warnings
+import argparse # Added
+import json # Added
+from common.date_utils import get_next_euromillions_draw_date # Added
+
 warnings.filterwarnings('ignore')
 
 class OptimizedFuturisticAI:
@@ -34,9 +38,9 @@ class OptimizedFuturisticAI:
         
     def setup_environment(self):
         """Configure l'environnement futuriste optimisé."""
-        print("🔮 Configuration futuriste optimisée...")
+        # print("🔮 Configuration futuriste optimisée...") # Suppressed
         
-        os.makedirs('/home/ubuntu/results/futuristic_optimized', exist_ok=True)
+        os.makedirs('results/futuristic_optimized', exist_ok=True)
         
         # Paramètres optimisés
         self.quantum_params = {
@@ -56,15 +60,31 @@ class OptimizedFuturisticAI:
         
     def load_data(self):
         """Charge les données."""
-        print("📊 Chargement des données...")
+        # print("📊 Chargement des données...") # Suppressed
         
-        try:
-            self.df = pd.read_csv('/home/ubuntu/euromillions_enhanced_dataset.csv')
-            print(f"✅ Données: {len(self.df)} tirages")
-        except:
-            print("❌ Erreur chargement données")
-            return
-            
+        data_path_primary = 'data/euromillions_enhanced_dataset.csv'
+        data_path_fallback = 'euromillions_enhanced_dataset.csv'
+        actual_data_path = None
+
+        if os.path.exists(data_path_primary):
+            actual_data_path = data_path_primary
+        elif os.path.exists(data_path_fallback):
+            actual_data_path = data_path_fallback
+            # print(f"ℹ️ Données chargées depuis {actual_data_path} (fallback)") # Suppressed
+
+        if actual_data_path:
+            try:
+                self.df = pd.read_csv(actual_data_path)
+                # print(f"✅ Données: {len(self.df)} tirages") # Suppressed
+            except Exception as e:
+                # print(f"❌ Erreur chargement données depuis {actual_data_path}: {e}") # Suppressed
+                self.df = pd.DataFrame() # Fallback
+                if self.df.empty: raise FileNotFoundError("Dataset not found.")
+        else:
+            # print(f"❌ ERREUR: Fichier de données non trouvé ({data_path_primary} ou {data_path_fallback})") # Suppressed
+            self.df = pd.DataFrame() # Fallback
+            if self.df.empty: raise FileNotFoundError("Dataset not found.")
+
         self.target_draw = {
             'numbers': [20, 21, 29, 30, 35],
             'stars': [2, 12]
@@ -475,7 +495,7 @@ class OptimizedFuturisticAI:
         
     def save_results(self, prediction, validation):
         """Sauvegarde les résultats."""
-        print("💾 Sauvegarde futuriste...")
+        # print("💾 Sauvegarde futuriste...") # Suppressed
         
         results = {
             'prediction': prediction,
@@ -483,7 +503,7 @@ class OptimizedFuturisticAI:
             'timestamp': datetime.now().isoformat()
         }
         
-        with open('/home/ubuntu/results/futuristic_optimized/phase1_results.json', 'w') as f:
+        with open('results/futuristic_optimized/phase1_results.json', 'w') as f:
             json.dump(results, f, indent=2, default=str)
         
         # Rapport
@@ -510,13 +530,50 @@ Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 🌟 PREMIÈRE ÉTAPE VERS LA SINGULARITÉ TECHNOLOGIQUE 🌟
 """
         
-        with open('/home/ubuntu/results/futuristic_optimized/phase1_report.txt', 'w') as f:
+        with open('results/futuristic_optimized/phase1_report.txt', 'w') as f:
             f.write(report)
         
-        print("✅ Résultats sauvegardés!")
+        # print("✅ Résultats sauvegardés!") # Suppressed
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Optimized Futuristic AI Predictor for Euromillions.")
+    parser.add_argument("--date", type=str, help="Target draw date in YYYY-MM-DD format.")
+    args = parser.parse_args()
+
+    target_date_str = None
+    data_file_for_date_calc = "data/euromillions_enhanced_dataset.csv"
+    if not os.path.exists(data_file_for_date_calc):
+        data_file_for_date_calc = "euromillions_enhanced_dataset.csv"
+        if not os.path.exists(data_file_for_date_calc):
+            data_file_for_date_calc = None
+
+    if args.date:
+        try:
+            datetime.strptime(args.date, '%Y-%m-%d') # Validate
+            target_date_str = args.date
+        except ValueError:
+            # print(f"Warning: Invalid date format for --date {args.date}. Using next logical date.", file=sys.stderr) # Suppressed
+            target_date_obj = get_next_euromillions_draw_date(data_file_for_date_calc)
+            target_date_str = target_date_obj.strftime('%Y-%m-%d')
+    else:
+        target_date_obj = get_next_euromillions_draw_date(data_file_for_date_calc)
+        target_date_str = target_date_obj.strftime('%Y-%m-%d')
+
     futuristic_ai = OptimizedFuturisticAI()
-    results = futuristic_ai.run_futuristic_phase1()
-    print("\n🎉 MISSION FUTURISTE 1 OPTIMISÉE: ACCOMPLIE! 🎉")
+    prediction_result = futuristic_ai.run_futuristic_phase1() # This is futuristic_fusion
+    # print("\n🎉 MISSION FUTURISTE 1 OPTIMISÉE: ACCOMPLIE! 🎉") # Suppressed
+
+    confidence_value = prediction_result.get('futuristic_score', 0)
+    normalized_confidence = min(10.0, (confidence_value / 15.0) * 10.0) if isinstance(confidence_value, (int, float)) else 7.0
+
+
+    output_dict = {
+        "nom_predicteur": "futuristic_phase1_optimized",
+        "numeros": prediction_result.get('numbers'),
+        "etoiles": prediction_result.get('stars'),
+        "date_tirage_cible": target_date_str,
+        "confidence": normalized_confidence,
+        "categorie": "Revolutionnaire"
+    }
+    print(json.dumps(output_dict))
 

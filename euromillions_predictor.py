@@ -9,17 +9,16 @@ import sys
 import json
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-from datetime import datetime
+# import matplotlib.pyplot as plt # Commented for CLI JSON output
+# import seaborn as sns # Commented for CLI JSON output
+from datetime import datetime, date as datetime_date # Added datetime_date
 import random
 import argparse
-import tensorflow as tf
-from tensorflow import keras
-
-# Configuration de l'affichage
-plt.style.use('seaborn-v0_8-darkgrid')
-sns.set_palette("viridis")
+# import tensorflow as tf # Commented, TF not used in quick prediction
+# from tensorflow import keras # Commented
+from common.date_utils import get_next_euromillions_draw_date # Added
+# json, os, sys are already imported by virtue of being used in the file.
+# Explicitly adding for clarity if they were missing before, but they are not.
 
 class EuromillionsPredictor:
     """
@@ -77,12 +76,12 @@ class EuromillionsPredictor:
         
         return None
     
-    def generate_quick_prediction(self):
+    def generate_quick_prediction(self, target_date_override_str=None): # Added target_date_override_str
         """
         Génère une prédiction rapide basée sur des heuristiques et l'analyse statistique.
         """
-        print("Génération d'une prédiction rapide...")
-        
+        # print("Génération d'une prédiction rapide...") # Suppressed for JSON output
+
         # Determine actual data path to use
         actual_data_file_to_use = None
         if os.path.exists(self.data_path_primary):
@@ -99,12 +98,32 @@ class EuromillionsPredictor:
             main_numbers = sorted(random.sample(range(1, 51), 5))
             stars = sorted(random.sample(range(1, 13), 2))
             
+            # Determine target_date_str for this prediction
+            current_target_date_str = None
+            if target_date_override_str:
+                current_target_date_str = target_date_override_str
+            else:
+                data_file_for_next_date = None
+                if hasattr(self, 'actual_data_file_to_use') and self.actual_data_file_to_use and os.path.exists(self.actual_data_file_to_use):
+                    data_file_for_next_date = self.actual_data_file_to_use
+                elif hasattr(self, 'data_path_primary') and os.path.exists(self.data_path_primary):
+                    data_file_for_next_date = self.data_path_primary
+                elif hasattr(self, 'data_path_fallback') and os.path.exists(self.data_path_fallback):
+                    data_file_for_next_date = self.data_path_fallback
+
+                if data_file_for_next_date:
+                    current_target_date_str = get_next_euromillions_draw_date(data_file_for_next_date).strftime('%Y-%m-%d')
+                else:
+                    current_target_date_str = datetime.now().date().strftime('%Y-%m-%d')
+
+
             prediction = {
                 "main_numbers": main_numbers,
                 "stars": stars,
-                "confidence": 0.2,
-                "method": "Aléatoire",
-                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                "confidence": 0.2, # Default confidence for random
+                # "method": "Aléatoire", # Not part of the final JSON schema
+                # "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), # Not part of final schema
+                "date_tirage_cible": current_target_date_str
             }
             
             return prediction
@@ -366,25 +385,35 @@ class EuromillionsPredictor:
                 print("python euromillions_ultra_optimized.py")
         
         else:
-            # Génération d'une prédiction rapide
-            prediction = self.generate_quick_prediction()
+            # Default action: Generate quick prediction and output as JSON
+            # Pass the date argument from CLI to generate_quick_prediction
+            # The generate_quick_prediction method will be modified to accept args.date
+            prediction_data = self.generate_quick_prediction(target_date_override_str=args.date if hasattr(args, 'date') else None)
             
-            if prediction:
-                # Affichage de la prédiction
-                self.display_prediction(prediction)
-                
-                # Sauvegarde de la prédiction
-                self.save_prediction(prediction)
+            if prediction_data: # generate_quick_prediction now returns the dict
+                output_dict = {
+                    "nom_predicteur": "euromillions_predictor",
+                    "numeros": prediction_data.get('main_numbers'),
+                    "etoiles": prediction_data.get('stars'),
+                    "date_tirage_cible": prediction_data.get('date_tirage_cible'),
+                    "confidence": prediction_data.get('confidence', 5.0), # Default confidence
+                    "categorie": "Scientifique"
+                }
+                print(json.dumps(output_dict))
+                # self.display_prediction(prediction_data) # Suppressed for JSON output
+                # self.save_prediction(prediction_data) # Suppressed for JSON output
 
 def main():
     """
     Fonction principale.
     """
     # Analyse des arguments de la ligne de commande
-    parser = argparse.ArgumentParser(description="Interface utilisateur pour le système de prédiction Euromillions ultra-optimisé.")
+    # Keep existing args, add --date
+    parser = argparse.ArgumentParser(description="Euromillions Predictor CLI.")
     
     parser.add_argument("-v", "--visualize", action="store_true", help="Visualise les prédictions existantes.")
     parser.add_argument("-a", "--advanced", action="store_true", help="Vérifie l'existence des modèles avancés.")
+    parser.add_argument("--date", type=str, help="Target draw date in YYYY-MM-DD format for quick prediction.")
     
     args = parser.parse_args()
     
@@ -392,6 +421,7 @@ def main():
     predictor = EuromillionsPredictor()
     
     # Exécution de l'interface utilisateur
+    # The run method will now handle the args.date for the default case
     predictor.run(args)
 
 if __name__ == "__main__":

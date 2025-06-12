@@ -29,6 +29,10 @@ import json
 import os
 from typing import List, Tuple, Dict, Any, Optional
 import warnings
+import argparse # Added
+# json, datetime are already imported
+from common.date_utils import get_next_euromillions_draw_date, date as datetime_date # Added
+
 warnings.filterwarnings('ignore')
 
 class FractalAnalyzer:
@@ -1005,24 +1009,52 @@ def main():
     print("=" * 70)
     
     # Initialisation
-    predictor = ChaosFractalPredictor()
+    parser = argparse.ArgumentParser(description="Chaos Fractal Predictor for Euromillions.")
+    parser.add_argument("--date", type=str, help="Target draw date in YYYY-MM-DD format.")
+    args = parser.parse_args()
+
+    target_date_str = None
+    data_file_for_date_calc = "data/euromillions_enhanced_dataset.csv"
+    if not os.path.exists(data_file_for_date_calc):
+        data_file_for_date_calc = "euromillions_enhanced_dataset.csv"
+        if not os.path.exists(data_file_for_date_calc):
+            data_file_for_date_calc = None
+
+    if args.date:
+        try:
+            datetime.strptime(args.date, '%Y-%m-%d') # Validate
+            target_date_str = args.date
+        except ValueError:
+            # print(f"Warning: Invalid date format for --date {args.date}. Using next logical date.", file=sys.stderr) # Suppressed
+            target_date_obj = get_next_euromillions_draw_date(data_file_for_date_calc)
+            target_date_str = target_date_obj.strftime('%Y-%m-%d')
+    else:
+        target_date_obj = get_next_euromillions_draw_date(data_file_for_date_calc)
+        target_date_str = target_date_obj.strftime('%Y-%m-%d')
+
+    predictor = ChaosFractalPredictor() # Uses its internal data loading
     
     # Génération de la prédiction
-    prediction = predictor.generate_chaos_fractal_prediction()
+    prediction_result = predictor.generate_chaos_fractal_prediction() # This is a dict
     
-    # Affichage des résultats
-    print("\n🎉 PRÉDICTION CHAOS-FRACTALE GÉNÉRÉE! 🎉")
-    print("=" * 50)
-    print(f"Numéros principaux: {', '.join(map(str, prediction['main_numbers']))}")
-    print(f"Étoiles: {', '.join(map(str, prediction['stars']))}")
-    print(f"Score de confiance: {prediction['confidence_score']:.2f}/10")
-    print(f"Séries optimales: {', '.join(prediction['best_series'])}")
-    print(f"Innovation: {prediction['innovation_level']}")
+    # Affichage des résultats - Suppressed for JSON output
+    # print("\n🎉 PRÉDICTION CHAOS-FRACTALE GÉNÉRÉE! 🎉")
+    # ... other prints ...
     
-    # Sauvegarde
-    predictor.save_chaos_fractal_results(prediction)
+    # Sauvegarde - This script saves its own files, which is fine for now.
+    # predictor.save_chaos_fractal_results(prediction_result)
     
-    print("\n🌀 ANALYSE CHAOS-FRACTALE TERMINÉE AVEC SUCCÈS! 🌀")
+    # print("\n🌀 ANALYSE CHAOS-FRACTALE TERMINÉE AVEC SUCCÈS! 🌀") # Suppressed
+
+    output_dict = {
+        "nom_predicteur": "chaos_fractal_predictor",
+        "numeros": prediction_result.get('main_numbers'),
+        "etoiles": prediction_result.get('stars'),
+        "date_tirage_cible": target_date_str,
+        "confidence": prediction_result.get('confidence_score', 6.0), # Default confidence
+        "categorie": "Revolutionnaire"
+    }
+    print(json.dumps(output_dict))
 
 if __name__ == "__main__":
     main()
