@@ -3,67 +3,48 @@ from datetime import datetime, timedelta, date
 
 def get_next_euromillions_draw_date(data_file_path: str) -> date:
     """
-    Calculates the next Euromillions draw date based on the latest date in the dataset.
-    Euromillions draws are typically on Tuesdays and Fridays.
+    Calculates the next Euromillions draw date.
+    Euromillions draws are on Tuesdays and Fridays.
+    This function first determines the latest draw date recorded in the provided data file.
+    Then, it searches for the next Tuesday or Friday strictly after this latest recorded date.
+    If the data file is missing, empty, or contains no valid dates, the search for the
+    next draw date defaults to starting from the current system date.
 
     Args:
         data_file_path: Path to the CSV dataset (e.g., "euromillions_enhanced_dataset.csv").
 
     Returns:
         The next Euromillions draw date as a datetime.date object.
-        Returns today's date if the dataset is empty or date column is problematic,
-        though a more robust error or default might be needed for production.
     """
+    latest_date_from_file = None
     try:
         df = pd.read_csv(data_file_path)
-        if 'Date' not in df.columns or df.empty: # Added df.empty check here
-            print(f"Warning: 'Date' column not found or empty in {data_file_path}. Defaulting to calculate from today.")
-            latest_date = datetime.now().date()
+        if 'Date' not in df.columns or df.empty:
+            print(f"Warning: 'Date' column not found or DataFrame empty in {data_file_path}. Defaulting to current date for latest_date_from_file.")
+            latest_date_from_file = datetime.now().date()
         else:
-            # Ensure 'Date' column is parsed as datetime objects
             df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
-            df.dropna(subset=['Date'], inplace=True) # Remove rows where date couldn't be parsed
-
+            df.dropna(subset=['Date'], inplace=True)
             if df.empty:
-                print(f"Warning: No valid dates found in {data_file_path} after parsing. Defaulting to calculate from today.")
-                latest_date = datetime.now().date()
+                print(f"Warning: No valid dates in 'Date' column in {data_file_path} after parsing. Defaulting to current date for latest_date_from_file.")
+                latest_date_from_file = datetime.now().date()
             else:
-                latest_date = df['Date'].max().date()
-
+                latest_date_from_file = df['Date'].max().date()
     except FileNotFoundError:
-        print(f"Warning: Data file {data_file_path} not found. Defaulting to calculate from today.")
-        latest_date = datetime.now().date()
+        print(f"Warning: Data file {data_file_path} not found. Defaulting to current date for latest_date_from_file.")
+        latest_date_from_file = datetime.now().date()
     except Exception as e:
-        print(f"Error reading or parsing dates from {data_file_path}: {e}. Defaulting to calculate from today.")
-        latest_date = datetime.now().date()
+        print(f"Error reading or parsing {data_file_path}: {e}. Defaulting to current date for latest_date_from_file.")
+        latest_date_from_file = datetime.now().date()
 
-    next_date_candidate = latest_date + timedelta(days=1)
+    current_search_date = datetime.now().date()
 
     while True:
-        weekday = next_date_candidate.weekday()  # Monday is 0 and Sunday is 6
-        # Tuesday is 1, Friday is 4
-        # We need to ensure that if latest_date itself is a draw date, we find the *next* one.
-        # So, if next_date_candidate is a draw day AND it's strictly greater than latest_date, it's a valid candidate.
-        # However, our loop structure with `latest_date + timedelta(days=1)` and then incrementing
-        # already ensures we are looking for a date *after* latest_date.
+        weekday = current_search_date.weekday()  # Monday is 0, Tuesday is 1, ..., Friday is 4, ...
         if weekday == 1 or weekday == 4: # Tuesday or Friday
-            # If latest_date was a draw date, and next_date_candidate is that same date,
-            # this means the latest_date in the file was yesterday, and today is a draw day.
-            # This logic correctly finds the *next upcoming* draw date.
-            # If the latest_date in the file is *today* and *today* is a draw day,
-            # this will find the draw day *after* today.
-            if next_date_candidate > latest_date:
-                 return next_date_candidate
-            # If latest_date is today and a draw day, we need the *next* draw day.
-            # This case is handled by just continuing to increment next_date_candidate.
-            # The condition next_date_candidate > latest_date handles the case where the
-            # loop starts on a draw day that is also latest_date.
-            # To be certain, if latest_date is a draw date, we must ensure next_date_candidate is a *future* draw.
-            # The current logic seems to handle this: we start checking from `latest_date + 1 day`.
-            # Let's refine the loop slightly for clarity for the case where latest_date itself is a draw day.
-            # The current logic is: start from tomorrow, find the first Tue/Fri. This is correct.
-            return next_date_candidate
-        next_date_candidate += timedelta(days=1)
+            if current_search_date > latest_date_from_file:
+                return current_search_date
+        current_search_date += timedelta(days=1)
 
 if __name__ == '__main__':
     # Create a dummy CSV for testing
