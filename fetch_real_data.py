@@ -437,7 +437,7 @@ def update_euromillions_data():
 
     # Afficher un aperçu des données
     print("\nAperçu des données:")
-    print(df.head())
+    print(df.tail())
     
     # Ensure 'Date' column is in datetime format for min/max operations
     if 'Date' in df.columns and not pd.api.types.is_datetime64_any_dtype(df['Date']):
@@ -470,7 +470,7 @@ def update_euromillions_data():
     elif source == "CSV":
         status_message = f"Data updated using existing dataset 'euromillions_dataset.csv'. Total draws: {len(df_enhanced)}. Period: {date_min_str} to {date_max_str}."
     elif source == "synthetic":
-        status_message = f"Data updated using synthetic dataset. Total draws: {len(df_enhanced)}. Period: {date_min_str} to {date_max_str}."
+        status_message = f"Data updated using synthetic dataset. Total draws: {len(df_enhanced)}. Period: {date_min_str} to {date_max_str}. (Note: Synthetic data has a predefined end date, currently around 2025-06-06)."
     else:
         status_message = f"Data processed from unknown source. Total draws: {len(df_enhanced)}. Period: {date_min_str} to {date_max_str}."
 
