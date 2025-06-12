@@ -272,9 +272,9 @@ def run_consensus_by_frequency_prediction(selected_model_names: list = None): # 
 AVAILABLE_MODELS = {
     'final_valide': run_final_valide,
     'revolutionnaire': run_revolutionnaire,
-    'agrege': run_agrege,
-    'tf_lstm_std': run_tf_lstm_std,
-    'tf_lstm_enhanced': run_tf_lstm_enhanced
+    'agrege': run_agrege
+    # 'tf_lstm_std': run_tf_lstm_std, # Removed
+    # 'tf_lstm_enhanced': run_tf_lstm_enhanced # Removed
     # Note: AVAILABLE_MODELS is now only used by the 'predict' command, not 'predict-consensus'.
     # The 'predict-consensus' --models arg now filters PREDICTOR_CONFIGS.
 }
