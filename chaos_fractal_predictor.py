@@ -44,7 +44,7 @@ class FractalAnalyzer:
         """
         Initialise l'analyseur fractal.
         """
-        print("🔬 Analyseur Fractal initialisé")
+        # print("🔬 Analyseur Fractal initialisé") # Suppressed
         self.fractal_dimensions = {}
         self.self_similarity_patterns = {}
     
@@ -256,7 +256,7 @@ class ChaosAnalyzer:
         """
         Initialise l'analyseur de chaos.
         """
-        print("🌪️ Analyseur de Chaos initialisé")
+        # print("🌪️ Analyseur de Chaos initialisé") # Suppressed
         self.phase_space = None
         self.lyapunov_exponents = []
         self.strange_attractors = []
@@ -508,8 +508,8 @@ class ChaosFractalPredictor:
         """
         Initialise le prédicteur chaos-fractal.
         """
-        print("🌀 SYSTÈME CHAOS-FRACTAL RÉVOLUTIONNAIRE 🌀")
-        print("=" * 60)
+        # print("🌀 SYSTÈME CHAOS-FRACTAL RÉVOLUTIONNAIRE 🌀") # Suppressed
+        # print("=" * 60) # Suppressed
         
         # Chargement des données
         if os.path.exists(data_path): # Checks "data/euromillions_enhanced_dataset.csv"
@@ -517,9 +517,9 @@ class ChaosFractalPredictor:
             print(f"✅ Données chargées depuis {data_path}: {len(self.df)} tirages")
         elif os.path.exists("euromillions_enhanced_dataset.csv"): # Fallback to current dir
             self.df = pd.read_csv("euromillions_enhanced_dataset.csv")
-            print(f"✅ Données chargées depuis le répertoire courant (euromillions_enhanced_dataset.csv): {len(self.df)} tirages")
+            # print(f"✅ Données chargées depuis le répertoire courant (euromillions_enhanced_dataset.csv): {len(self.df)} tirages") # Suppressed
         else:
-            print(f"❌ Fichier principal non trouvé ({data_path} ou euromillions_enhanced_dataset.csv). Utilisation de données de base...")
+            # print(f"❌ Fichier principal non trouvé ({data_path} ou euromillions_enhanced_dataset.csv). Utilisation de données de base...") # Suppressed
             self.load_basic_data()
         
         # Initialisation des analyseurs
@@ -537,12 +537,12 @@ class ChaosFractalPredictor:
         """
         if os.path.exists("data/euromillions_dataset.csv"):
             self.df = pd.read_csv("data/euromillions_dataset.csv")
-            print(f"✅ Données de base chargées depuis data/euromillions_dataset.csv: {len(self.df)} tirages")
+            # print(f"✅ Données de base chargées depuis data/euromillions_dataset.csv: {len(self.df)} tirages") # Suppressed
         elif os.path.exists("euromillions_dataset.csv"): # Fallback to current dir
             self.df = pd.read_csv("euromillions_dataset.csv")
-            print(f"✅ Données de base chargées depuis le répertoire courant (euromillions_dataset.csv): {len(self.df)} tirages")
+            # print(f"✅ Données de base chargées depuis le répertoire courant (euromillions_dataset.csv): {len(self.df)} tirages") # Suppressed
         else:
-            print(f"❌ Fichier de données de base (euromillions_dataset.csv) non trouvé. Création de données synthétiques...")
+            # print(f"❌ Fichier de données de base (euromillions_dataset.csv) non trouvé. Création de données synthétiques...") # Suppressed
             # Création de données synthétiques
             dates = pd.date_range(start='2020-01-01', end='2025-06-01', freq='3D')
             data = []
@@ -564,7 +564,7 @@ class ChaosFractalPredictor:
         """
         Prépare les séries temporelles pour l'analyse chaos-fractale.
         """
-        print("📊 Préparation des séries temporelles chaos-fractales...")
+        # print("📊 Préparation des séries temporelles chaos-fractales...") # Suppressed
         
         # Extraction des séries
         main_numbers = self.df[['N1', 'N2', 'N3', 'N4', 'N5']].values
@@ -584,7 +584,7 @@ class ChaosFractalPredictor:
             'prime_density': self.prime_density_series(main_numbers)
         }
         
-        print(f"✅ {len(self.time_series)} séries temporelles préparées")
+        # print(f"✅ {len(self.time_series)} séries temporelles préparées") # Suppressed
     
     def calculate_entropy_series(self, numbers: np.ndarray) -> np.ndarray:
         """
@@ -698,7 +698,7 @@ class ChaosFractalPredictor:
         """
         Analyse les propriétés fractales de toutes les séries temporelles.
         """
-        print("🔬 Analyse des propriétés fractales...")
+        # print("🔬 Analyse des propriétés fractales...") # Suppressed
         
         fractal_results = {}
         
@@ -732,7 +732,7 @@ class ChaosFractalPredictor:
         """
         Analyse les propriétés chaotiques de toutes les séries temporelles.
         """
-        print("🌪️ Analyse des propriétés chaotiques...")
+        # print("🌪️ Analyse des propriétés chaotiques...") # Suppressed
         
         chaos_results = {}
         
@@ -762,8 +762,8 @@ class ChaosFractalPredictor:
         """
         Génère une prédiction basée sur l'analyse chaos-fractale.
         """
-        print("\n🎯 GÉNÉRATION DE PRÉDICTION CHAOS-FRACTALE 🎯")
-        print("=" * 55)
+        # print("\n🎯 GÉNÉRATION DE PRÉDICTION CHAOS-FRACTALE 🎯") # Suppressed
+        # print("=" * 55) # Suppressed
         
         # Analyses fractales et chaotiques
         fractal_props = self.analyze_fractal_properties()
@@ -969,29 +969,17 @@ class ChaosFractalPredictor:
         json_prediction = convert_for_json(prediction)
         
         # Sauvegarde JSON complète
-        with open("results/chaos_fractal/chaos_fractal_prediction.json", 'w') as f:
-            json.dump(json_prediction, f, indent=4)
+        # Commenting out file saving for CLI JSON output focus
+        # with open("results/chaos_fractal/chaos_fractal_prediction.json", 'w') as f:
+        #     json.dump(json_prediction, f, indent=4)
         
         # Sauvegarde texte formaté
-        with open("results/chaos_fractal/chaos_fractal_prediction.txt", 'w') as f:
-            f.write("PRÉDICTION CHAOS-FRACTALE RÉVOLUTIONNAIRE\n")
-            f.write("=" * 50 + "\n\n")
-            f.write("🌀 ANALYSE CHAOS-FRACTALE RÉVOLUTIONNAIRE 🌀\n\n")
-            f.write(f"Date: {prediction['timestamp']}\n")
-            f.write(f"Méthode: {prediction['method']}\n\n")
-            f.write("PRÉDICTION FINALE:\n")
-            f.write(f"Numéros principaux: {', '.join(map(str, prediction['main_numbers']))}\n")
-            f.write(f"Étoiles: {', '.join(map(str, prediction['stars']))}\n\n")
-            f.write("MÉTRIQUES RÉVOLUTIONNAIRES:\n")
-            f.write(f"Score de confiance: {prediction['confidence_score']:.2f}/10\n")
-            f.write(f"Séries optimales: {', '.join(prediction['best_series'])}\n")
-            f.write(f"Innovation: {prediction['innovation_level']}\n\n")
-            f.write("Cette prédiction utilise des techniques révolutionnaires\n")
-            f.write("d'analyse fractale et de théorie du chaos jamais appliquées\n")
-            f.write("à la prédiction de numéros de loterie.\n\n")
-            f.write("🍀 BONNE CHANCE AVEC CETTE INNOVATION CHAOS-FRACTALE! 🍀\n")
-        
-        print("✅ Résultats chaos-fractals sauvegardés dans results/chaos_fractal/")
+        # with open("results/chaos_fractal/chaos_fractal_prediction.txt", 'w') as f:
+            # f.write("PRÉDICTION CHAOS-FRACTALE RÉVOLUTIONNAIRE\n")
+            # ... (rest of the text content) ...
+            # f.write("🍀 BONNE CHANCE AVEC CETTE INNOVATION CHAOS-FRACTALE! 🍀\n")
+
+        # print("✅ Résultats chaos-fractals sauvegardés dans results/chaos_fractal/") # Suppressed
 
 def main():
     """

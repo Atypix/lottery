@@ -116,13 +116,25 @@ def use_existing_dataset():
     Returns:
         DataFrame contenant les données historiques
     """
+    path_in_data_subdir = "data/euromillions_dataset.csv"
+    path_in_root_dir = "euromillions_dataset.csv"
+
     try:
-        print("Utilisation du jeu de données existant...")
-        df = pd.read_csv("euromillions_dataset.csv")
-        print(f"Jeu de données existant chargé: {len(df)} tirages")
-        return df, "CSV", None # No latest_draw_info for CSV
+        if os.path.exists(path_in_data_subdir):
+            print(f"Utilisation du jeu de données existant depuis {path_in_data_subdir}...")
+            df = pd.read_csv(path_in_data_subdir)
+            print(f"Jeu de données existant chargé: {len(df)} tirages")
+            return df, "CSV", None
+        elif os.path.exists(path_in_root_dir):
+            print(f"Utilisation du jeu de données existant depuis {path_in_root_dir} (racine)...")
+            df = pd.read_csv(path_in_root_dir)
+            print(f"Jeu de données existant chargé: {len(df)} tirages")
+            return df, "CSV", None
+        else:
+            raise FileNotFoundError # Trigger the except block below
+
     except FileNotFoundError:
-        print("Aucun jeu de données disponible. Création d'un jeu de données synthétique...")
+        print(f"Aucun jeu de données existant trouvé ({path_in_data_subdir} ou {path_in_root_dir}). Création d'un jeu de données synthétique...")
         return create_synthetic_dataset()
 
 def create_synthetic_dataset():
@@ -450,7 +462,7 @@ def add_advanced_features(df):
     
     return df_enhanced
 
-def save_enhanced_dataset(df, filename="euromillions_enhanced_dataset.csv"):
+def save_enhanced_dataset(df, filename="data/euromillions_enhanced_dataset.csv"): # Changed default
     """
     Sauvegarde le jeu de données amélioré.
     
@@ -458,9 +470,15 @@ def save_enhanced_dataset(df, filename="euromillions_enhanced_dataset.csv"):
         df: DataFrame à sauvegarder
         filename: Nom du fichier de sortie
     """
-    df.to_csv(filename, index=False)
-    print(f"Jeu de données amélioré sauvegardé: {filename}")
-    print(f"Dimensions: {df.shape}")
+    try:
+        output_dir = os.path.dirname(filename)
+        if output_dir: # Ensure directory exists only if filename includes a directory path
+            os.makedirs(output_dir, exist_ok=True)
+        df.to_csv(filename, index=False)
+        print(f"Jeu de données amélioré sauvegardé: {filename}")
+        print(f"Dimensions: {df.shape}")
+    except Exception as e:
+        print(f"Erreur lors de la sauvegarde du jeu de données amélioré ({filename}): {e}")
     print(f"Colonnes: {df.columns.tolist()}")
 
 def _parse_and_validate_numbers(input_str, count, max_val, name="numbers"):
@@ -664,7 +682,7 @@ def update_euromillions_data():
     df_enhanced = add_advanced_features(df)
     
     # Sauvegarder le jeu de données amélioré à l'emplacement standardisé
-    save_enhanced_dataset(df_enhanced, "euromillions_enhanced_dataset.csv")
+    save_enhanced_dataset(df_enhanced) # Uses new default "data/euromillions_enhanced_dataset.csv"
 
     # Construire le message de statut
     if source == "API":

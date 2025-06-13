@@ -17,7 +17,9 @@ import os
 import json
 import pandas as pd
 import numpy as np
-from datetime import datetime, date # Added date
+from datetime import datetime, date, timedelta # Added date and timedelta
+import argparse # Added
+import sys # Added for stderr
 import glob
 from collections import defaultdict, Counter
 import matplotlib.pyplot as plt
@@ -34,17 +36,26 @@ class AggregatedFinalPredictor:
     Générateur de tirage final basé sur l'agrégation de tous les enseignements.
     """
     
-    def __init__(self):
-        print("🎯 GÉNÉRATEUR DE TIRAGE FINAL AGRÉGÉ 🎯")
-        print("=" * 70)
+    def __init__(self, target_date_str=None): # Modified to accept target_date_str
+        # print("🎯 GÉNÉRATEUR DE TIRAGE FINAL AGRÉGÉ 🎯") # Suppressed
+        # print("=" * 70) # Suppressed
 
         self.NUM_RECENT_DRAWS = 10  # Number of recent draws for validation
-        self.actual_next_draw_date = get_next_euromillions_draw_date("euromillions_enhanced_dataset.csv")
-        print(f"🔮 PRÉDICTION POUR LE TIRAGE DU: {self.actual_next_draw_date.strftime('%d/%m/%Y')} (dynamically determined)")
 
-        print("Objectif: Créer la prédiction ultime basée sur tous les apprentissages")
-        print("Méthode: Agrégation intelligente de 36 systèmes développés")
-        print("=" * 70)
+        if target_date_str:
+            try:
+                self.actual_next_draw_date = datetime.strptime(target_date_str, '%Y-%m-%d').date()
+                # print(f"ℹ️ Date cible fournie: {self.actual_next_draw_date.strftime('%d/%m/%Y')}", file=sys.stderr) # Optional: info to stderr
+            except ValueError:
+                # print(f"⚠️ Format de date invalide '{target_date_str}'. Utilisation de la date auto-déterminée.", file=sys.stderr)
+                self._determine_draw_date()
+        else:
+            self._determine_draw_date()
+
+        # print(f"🔮 PRÉDICTION POUR LE TIRAGE DU: {self.actual_next_draw_date.strftime('%d/%m/%Y')} (dynamically determined)") # Suppressed
+        # print("Objectif: Créer la prédiction ultime basée sur tous les apprentissages") # Suppressed
+        # print("Méthode: Agrégation intelligente de 36 systèmes développés") # Suppressed
+        # print("=" * 70) # Suppressed
         
         self.setup_aggregation_environment()
         self.load_comprehensive_learnings()
@@ -58,6 +69,24 @@ class AggregatedFinalPredictor:
         
         self.aggregated_prediction = {}
         
+    def _determine_draw_date(self):
+        """Helper function to determine the draw date if not provided or invalid."""
+        data_file_for_date = "data/euromillions_enhanced_dataset.csv"
+        if not os.path.exists(data_file_for_date):
+            data_file_for_date = "euromillions_enhanced_dataset.csv" # Fallback
+            if not os.path.exists(data_file_for_date):
+                # print("⚠️ Fichier de données non trouvé pour déterminer la date. Utilisation du prochain vendredi.", file=sys.stderr)
+                data_file_for_date = None
+
+        self.actual_next_draw_date = get_next_euromillions_draw_date(data_file_for_date)
+        if self.actual_next_draw_date is None: # Handle case where date could not be determined
+            # print(f"⚠️ Date non déterminée à partir des données, utilisation du prochain vendredi par défaut", file=sys.stderr)
+            today = datetime.now().date()
+            days_until_friday = (4 - today.weekday() + 7) % 7
+            if days_until_friday == 0 and datetime.now().time() > datetime.strptime("20:00", "%H:%M").time(): # If it's Friday past draw time
+                days_until_friday = 7 # Aim for next week's Friday
+            self.actual_next_draw_date = today + timedelta(days=days_until_friday)
+
     def setup_aggregation_environment(self):
         """Configure l'environnement d'agrégation."""
         self.aggregation_dir = 'results/final_aggregation'
@@ -65,11 +94,11 @@ class AggregatedFinalPredictor:
         os.makedirs(f'{self.aggregation_dir}/analysis', exist_ok=True)
         os.makedirs(f'{self.aggregation_dir}/visualizations', exist_ok=True)
         
-        print("✅ Environnement d'agrégation configuré")
+        # print("✅ Environnement d'agrégation configuré") # Suppressed
         
     def load_comprehensive_learnings(self):
         """Charge tous les enseignements synthétisés."""
-        print("📚 Chargement des enseignements synthétisés...")
+        # print("📚 Chargement des enseignements synthétisés...") # Suppressed
         
         # Chargement de la synthèse complète
         synthesis_file = 'results/learnings_synthesis/comprehensive_synthesis.json'
@@ -77,9 +106,9 @@ class AggregatedFinalPredictor:
         try:
             with open(synthesis_file, 'r') as f:
                 self.synthesis = json.load(f)
-            print("✅ Synthèse complète chargée")
+            # print("✅ Synthèse complète chargée") # Suppressed
         except Exception as e:
-            print(f"⚠️ Erreur chargement synthèse: {e}")
+            # print(f"⚠️ Erreur chargement synthèse: {e}", file=sys.stderr) # To stderr
             self.synthesis = {}
         
         # Chargement des résultats de tests
@@ -93,9 +122,9 @@ class AggregatedFinalPredictor:
                         result = json.load(f)
                     self.test_results.append(result)
                 except Exception as e:
-                    print(f"⚠️ Erreur lecture {file_path}: {e}")
+                    # print(f"⚠️ Erreur lecture {file_path}: {e}", file=sys.stderr) # To stderr
         
-        print(f"✅ {len(self.test_results)} résultats de tests chargés")
+        # print(f"✅ {len(self.test_results)} résultats de tests chargés") # Suppressed
         
         # Chargement des données historiques
         self.load_historical_data()
@@ -103,19 +132,30 @@ class AggregatedFinalPredictor:
     def load_historical_data(self):
         """Charge les données historiques Euromillions."""
         
-        data_file = 'euromillions_enhanced_dataset.csv'
-        
-        try:
-            self.historical_data = pd.read_csv(data_file)
-            print(f"✅ {len(self.historical_data)} tirages historiques chargés")
-        except Exception as e:
-            print(f"⚠️ Erreur chargement données: {e}")
-            # Génération de données de fallback
+        data_file_primary = 'data/euromillions_enhanced_dataset.csv'
+        data_file_fallback = 'euromillions_enhanced_dataset.csv'
+        actual_data_path = None
+
+        if os.path.exists(data_file_primary):
+            actual_data_path = data_file_primary
+        elif os.path.exists(data_file_fallback):
+            actual_data_path = data_file_fallback
+            # print(f"ℹ️ Données historiques chargées depuis {actual_data_path} (fallback)") # Suppressed
+
+        if actual_data_path:
+            try:
+                self.historical_data = pd.read_csv(actual_data_path)
+                # print(f"✅ {len(self.historical_data)} tirages historiques chargés") # Suppressed
+            except Exception as e:
+                # print(f"⚠️ Erreur chargement données depuis {actual_data_path}: {e}", file=sys.stderr) # To stderr
+                self.generate_fallback_data()
+        else:
+            # print(f"⚠️ Fichier de données historiques non trouvé ({data_file_primary} ou {data_file_fallback}).") # Suppressed
             self.generate_fallback_data()
             
     def generate_fallback_data(self):
         """Génère des données de fallback si nécessaire."""
-        print("🔄 Génération de données de fallback...")
+        # print("🔄 Génération de données de fallback...") # Suppressed
         
         np.random.seed(42)
         n_draws = 1000
@@ -132,11 +172,11 @@ class AggregatedFinalPredictor:
             })
         
         self.historical_data = pd.DataFrame(data)
-        print("✅ Données de fallback générées")
+        # print("✅ Données de fallback générées") # Suppressed
         
     def analyze_prediction_consensus(self):
         """Analyse le consensus des prédictions."""
-        print("🤝 Analyse du consensus des prédictions...")
+        # print("🤝 Analyse du consensus des prédictions...") # Suppressed
         
         # Extraction de toutes les prédictions valides
         all_predictions = []
@@ -179,12 +219,12 @@ class AggregatedFinalPredictor:
             'star_votes': dict(star_votes)
         }
         
-        print(f"✅ Consensus analysé sur {len(all_predictions)} prédictions")
+        # print(f"✅ Consensus analysé sur {len(all_predictions)} prédictions") # Suppressed
         return consensus
         
     def apply_best_practices_insights(self):
         """Applique les insights des meilleures pratiques."""
-        print("🏆 Application des insights des meilleures pratiques...")
+        # print("🏆 Application des insights des meilleures pratiques...") # Suppressed
         
         best_practices = self.synthesis.get('best_practices', {})
         
@@ -214,12 +254,12 @@ class AggregatedFinalPredictor:
             if 'Perfect' in approach['approach']:
                 insights['perfect_match_systems'] = approach['systems']
         
-        print("✅ Insights des meilleures pratiques appliqués")
+        # print("✅ Insights des meilleures pratiques appliqués") # Suppressed
         return insights
         
     def analyze_historical_patterns(self):
         """Analyse les patterns historiques."""
-        print("📊 Analyse des patterns historiques...")
+        # print("📊 Analyse des patterns historiques...") # Suppressed
         
         # Fréquences historiques
         all_numbers = []
@@ -268,12 +308,12 @@ class AggregatedFinalPredictor:
             }
         }
         
-        print("✅ Patterns historiques analysés")
+        # print("✅ Patterns historiques analysés") # Suppressed
         return patterns
         
     def create_ensemble_prediction(self, consensus, insights, patterns):
         """Crée une prédiction d'ensemble basée sur tous les inputs."""
-        print("🎯 Création de la prédiction d'ensemble...")
+        # print("🎯 Création de la prédiction d'ensemble...") # Suppressed
         
         # Scores combinés pour les numéros
         number_scores = defaultdict(float)
@@ -355,7 +395,7 @@ class AggregatedFinalPredictor:
             'methodology': 'Ensemble agrégé basé sur consensus, historique et patterns'
         }
         
-        print("✅ Prédiction d'ensemble créée")
+        # print("✅ Prédiction d'ensemble créée") # Suppressed
         return ensemble_prediction
         
     def validate_and_adjust_numbers(self, numbers, patterns):
@@ -367,7 +407,7 @@ class AggregatedFinalPredictor:
         
         if current_sum < target_sum_range[0] or current_sum > target_sum_range[1]:
             # Ajustement nécessaire
-            print(f"🔧 Ajustement de la somme: {current_sum} -> plage cible {target_sum_range}")
+            # print(f"🔧 Ajustement de la somme: {current_sum} -> plage cible {target_sum_range}") # Suppressed
             
             # Remplacement intelligent basé sur les patterns
             hist_freq = patterns['historical_number_frequency']
@@ -404,7 +444,7 @@ class AggregatedFinalPredictor:
                 consecutive_count += 1
                 if consecutive_count >= max_consecutive:
                     # Remplacement du dernier consécutif
-                    print("🔧 Ajustement pour éviter trop de consécutifs")
+                    # print("🔧 Ajustement pour éviter trop de consécutifs") # Suppressed
                     hist_freq = patterns['historical_number_frequency']
                     for candidate in range(1, 51):
                         if candidate not in numbers and hist_freq.get(candidate, 0) > 0:
@@ -456,7 +496,7 @@ class AggregatedFinalPredictor:
         
     def calculate_confidence_metrics(self, prediction, consensus, insights, patterns):
         """Calcule les métriques de confiance."""
-        print("📊 Calcul des métriques de confiance...")
+        # print("📊 Calcul des métriques de confiance...") # Suppressed
         
         metrics = {}
 
@@ -469,21 +509,33 @@ class AggregatedFinalPredictor:
                     recent_draws_df = self.historical_data.tail(self.NUM_RECENT_DRAWS)
                 else:
                     recent_draws_df = self.historical_data.tail(len(self.historical_data))
-                    print(f"⚠️ Moins de {self.NUM_RECENT_DRAWS} tirages disponibles pour validation ({len(self.historical_data)} utilisés).")
+                    # print(f"⚠️ Moins de {self.NUM_RECENT_DRAWS} tirages disponibles pour validation ({len(self.historical_data)} utilisés).", file=sys.stderr) # To stderr
             else:
                 # Attempt to load if self.historical_data was not loaded or empty
-                full_historical_data_for_recent = pd.read_csv('euromillions_enhanced_dataset.csv')
-                if len(full_historical_data_for_recent) >= self.NUM_RECENT_DRAWS:
-                    recent_draws_df = full_historical_data_for_recent.tail(self.NUM_RECENT_DRAWS)
-                elif not full_historical_data_for_recent.empty:
-                    recent_draws_df = full_historical_data_for_recent.tail(len(full_historical_data_for_recent))
-                    print(f"⚠️ Moins de {self.NUM_RECENT_DRAWS} tirages disponibles ({len(full_historical_data_for_recent)} utilisés).")
-                else:
-                    print("⚠️ Aucune donnée historique (récente ou complète) disponible pour la validation.")
-        except FileNotFoundError:
-            print("⚠️ Fichier euromillions_enhanced_dataset.csv non trouvé pour la validation des tirages récents.")
+                data_file_for_recent_val_primary = 'data/euromillions_enhanced_dataset.csv'
+                data_file_for_recent_val_fallback = 'euromillions_enhanced_dataset.csv'
+                actual_recent_val_path = None
+                if os.path.exists(data_file_for_recent_val_primary):
+                    actual_recent_val_path = data_file_for_recent_val_primary
+                elif os.path.exists(data_file_for_recent_val_fallback):
+                    actual_recent_val_path = data_file_for_recent_val_fallback
+
+                if actual_recent_val_path:
+                    full_historical_data_for_recent = pd.read_csv(actual_recent_val_path)
+                    if len(full_historical_data_for_recent) >= self.NUM_RECENT_DRAWS:
+                        recent_draws_df = full_historical_data_for_recent.tail(self.NUM_RECENT_DRAWS)
+                    elif not full_historical_data_for_recent.empty:
+                        recent_draws_df = full_historical_data_for_recent.tail(len(full_historical_data_for_recent))
+                        # print(f"⚠️ Moins de {self.NUM_RECENT_DRAWS} tirages disponibles ({len(full_historical_data_for_recent)} utilisés).", file=sys.stderr) # To stderr
+                    else:
+                        pass # print("⚠️ Aucune donnée historique (récente ou complète) disponible pour la validation.", file=sys.stderr) # To stderr
+                # else: # No file found
+                    # print("⚠️ Fichier euromillions_enhanced_dataset.csv non trouvé pour la validation des tirages récents.", file=sys.stderr) # To stderr
+
+        except FileNotFoundError: # This might catch if read_csv above fails for some reason
+            pass # print("⚠️ Fichier euromillions_enhanced_dataset.csv non trouvé pour la validation des tirages récents.", file=sys.stderr) # To stderr
         except Exception as e:
-            print(f"⚠️ Erreur lors du chargement/traitement des données récentes pour validation: {e}")
+            pass # print(f"⚠️ Erreur lors du chargement/traitement des données récentes pour validation: {e}", file=sys.stderr) # To stderr
 
         # 1. Score de consensus
         total_votes = sum(consensus['number_votes'].values())
@@ -556,16 +608,21 @@ class AggregatedFinalPredictor:
                     total_recent_number_matches += current_number_matches
                     total_recent_star_matches += current_star_matches
                 except KeyError as ke:
-                    print(f"Erreur de clé lors de l'accès aux colonnes pour la validation récente: {ke}. Tirage ignoré.")
-                    num_valid_recent_draws -=1 # Adjust count of valid draws
+                    # print(f"Erreur de clé lors de l'accès aux colonnes pour la validation récente: {ke}. Tirage ignoré.", file=sys.stderr) # To stderr
+                    if num_valid_recent_draws > 0: num_valid_recent_draws -=1 # Adjust count of valid draws
                     continue # Skip this draw
+                except ValueError as ve: # Handle potential conversion errors if data is not clean
+                    # print(f"Erreur de valeur lors de la conversion des données du tirage récent: {ve}. Tirage ignoré.", file=sys.stderr) # To stderr
+                    if num_valid_recent_draws > 0: num_valid_recent_draws -=1
+                    continue
+
 
             if num_valid_recent_draws > 0:
                 avg_number_matches_recent = total_recent_number_matches / num_valid_recent_draws
                 avg_star_matches_recent = total_recent_star_matches / num_valid_recent_draws
                 total_avg_matches_recent = (total_recent_number_matches + total_recent_star_matches) / num_valid_recent_draws
-            else:
-                print("⚠️ Aucun tirage récent n'a pu être validé (peut-être en raison d'erreurs de format de colonne).")
+            # else: # Suppressed to prevent print when no recent draws are available.
+                # print("⚠️ Aucun tirage récent n'a pu être validé (peut-être en raison d'erreurs de format de colonne).")
 
         validation_score_recent = total_avg_matches_recent / 7 if num_valid_recent_draws > 0 else 0.0
 
@@ -600,12 +657,12 @@ class AggregatedFinalPredictor:
             }
         }
         
-        print("✅ Métriques de confiance calculées")
+        # print("✅ Métriques de confiance calculées") # Suppressed
         return metrics
         
     def generate_aggregation_visualizations(self, prediction, consensus, metrics, output_filename): # Added output_filename
         """Génère les visualisations d'agrégation."""
-        print("📊 Génération des visualisations d'agrégation...")
+        # print("📊 Génération des visualisations d'agrégation...") # Suppressed
         
         fig, axes = plt.subplots(2, 2, figsize=(16, 12))
         # Add dynamic date to title if possible, or keep generic
@@ -699,11 +756,11 @@ class AggregatedFinalPredictor:
         plt.savefig(output_filename, dpi=300, bbox_inches='tight') # Use dynamic filename
         plt.close()
         
-        print(f"✅ Visualisations d'agrégation générées: {output_filename}")
+        # print(f"✅ Visualisations d'agrégation générées: {output_filename}") # Suppressed
         
     def save_final_prediction(self, prediction, consensus, insights, patterns, metrics):
         """Sauvegarde la prédiction finale."""
-        print("💾 Sauvegarde de la prédiction finale...")
+        # print("💾 Sauvegarde de la prédiction finale...") # Suppressed
         
         date_str_for_filename = self.actual_next_draw_date.strftime('%Y-%m-%d')
 
@@ -933,32 +990,32 @@ Rapport généré automatiquement par le Générateur de Tirage Final Agrégé
         with open(report_filename, 'w', encoding='utf-8') as f:
             f.write(report_content)
         
-        print(f"✅ Prédiction finale sauvegardée ({json_filename}, {ticket_filename}, {report_filename})")
+        # print(f"✅ Prédiction finale sauvegardée ({json_filename}, {ticket_filename}, {report_filename})") # Suppressed
         
     def run_final_aggregation(self):
         """Exécute l'agrégation finale complète."""
-        print("🚀 LANCEMENT DE L'AGRÉGATION FINALE COMPLÈTE 🚀")
-        print("=" * 70)
+        # print("🚀 LANCEMENT DE L'AGRÉGATION FINALE COMPLÈTE 🚀") # Suppressed
+        # print("=" * 70) # Suppressed
         
         # 1. Analyse du consensus
-        print("🤝 Phase 1: Analyse du consensus...")
+        # print("🤝 Phase 1: Analyse du consensus...") # Suppressed
         consensus = self.analyze_prediction_consensus()
         
         # 2. Application des insights
-        print("🏆 Phase 2: Application des insights...")
+        # print("🏆 Phase 2: Application des insights...") # Suppressed
         insights = self.apply_best_practices_insights()
         
         # 3. Analyse des patterns historiques
-        print("📊 Phase 3: Analyse historique...")
+        # print("📊 Phase 3: Analyse historique...") # Suppressed
         patterns = self.analyze_historical_patterns()
         
         # 4. Création de la prédiction d'ensemble
-        print("🎯 Phase 4: Prédiction d'ensemble...")
+        # print("🎯 Phase 4: Prédiction d'ensemble...") # Suppressed
         prediction = self.create_ensemble_prediction(consensus, insights, patterns)
         prediction['target_draw_date'] = self.actual_next_draw_date.strftime('%Y-%m-%d') # Add target date
         
         # 5. Calcul des métriques de confiance
-        print("📊 Phase 5: Métriques de confiance...")
+        # print("📊 Phase 5: Métriques de confiance...") # Suppressed
         metrics = self.calculate_confidence_metrics(prediction, consensus, insights, patterns)
         
         # Define dynamic visualization filename here to pass it down
@@ -966,14 +1023,14 @@ Rapport généré automatiquement par le Générateur de Tirage Final Agrégé
         visualization_filename = f'{self.aggregation_dir}/visualizations/final_aggregated_prediction_{date_str_for_filename}.png'
 
         # 6. Visualisations
-        print("📊 Phase 6: Visualisations...")
+        # print("📊 Phase 6: Visualisations...") # Suppressed
         self.generate_aggregation_visualizations(prediction, consensus, metrics, visualization_filename) # Pass filename
         
         # 7. Sauvegarde finale
-        print("💾 Phase 7: Sauvegarde...")
+        # print("💾 Phase 7: Sauvegarde...") # Suppressed
         self.save_final_prediction(prediction, consensus, insights, patterns, metrics)
         
-        print("✅ AGRÉGATION FINALE TERMINÉE!")
+        # print("✅ AGRÉGATION FINALE TERMINÉE!") # Suppressed
         
         # Stockage pour accès externe
         self.aggregated_prediction = {
@@ -987,31 +1044,37 @@ Rapport généré automatiquement par le Générateur de Tirage Final Agrégé
         return self.aggregated_prediction
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Générateur de Prédiction Finale Agrégée Euromillions.")
+    parser.add_argument("--date", type=str, help="Date cible du tirage (YYYY-MM-DD). Si non fournie, la prochaine date de tirage est auto-déterminée.")
+    args = parser.parse_args()
+
     # Lancement de l'agrégation finale
-    aggregator = AggregatedFinalPredictor()
+    aggregator = AggregatedFinalPredictor(target_date_str=args.date)
     results = aggregator.run_final_aggregation() # This is the comprehensive dict
 
     # Extract standardized prediction
-    prediction_numbers = results.get('prediction', {}).get('numbers', [])
-    prediction_stars = results.get('prediction', {}).get('stars', [])
-    prediction_confidence = results.get('metrics', {}).get('confidence_percentage', 0.0)
-    # Get target_draw_date from the results, fallback to aggregator's attribute if needed
-    target_date_str = results.get('prediction', {}).get('target_draw_date', aggregator.actual_next_draw_date.strftime('%Y-%m-%d'))
+    prediction_numeros = results.get('prediction', {}).get('numbers', [])
+    prediction_etoiles = results.get('prediction', {}).get('stars', [])
 
+    # Ensure confidence is a float, default to a standard value if not calculable or missing
+    raw_confidence = results.get('metrics', {}).get('confidence_percentage', 75.0) # Default 75.0
+    try:
+        prediction_confidence = float(raw_confidence)
+    except (ValueError, TypeError):
+        prediction_confidence = 75.0 # Default if conversion fails
+
+    # Ensure target_date_str for output is from the aggregator instance (which handled args.date)
+    output_target_date_str = aggregator.actual_next_draw_date.strftime('%Y-%m-%d')
     
-    standardized_output = {
-        'numbers': prediction_numbers,
-        'stars': prediction_stars,
-        'confidence': prediction_confidence,
-        'model_name': 'aggregated_final_predictor',
-        'target_draw_date': target_date_str
+    output_dict = {
+        'nom_predicteur': 'aggregated_final_predictor',
+        'numeros': prediction_numeros,
+        'etoiles': prediction_etoiles,
+        'date_tirage_cible': output_target_date_str,
+        'confidence': prediction_confidence, # Should be a float e.g. 78.5 for 78.5%
+        'categorie': "Meta-Predicteurs"
     }
     
-    print(f"\n🎯 PRÉDICTION FINALE AGRÉGÉE (Pour le {standardized_output['target_draw_date']}):")
-    print(f"Numéros: {standardized_output['numbers']}")
-    print(f"Étoiles: {standardized_output['stars']}")
-    print(f"Confiance: {standardized_output['confidence']:.1f}%")
-    print(f"Modèle: {standardized_output['model_name']}")
-
-    print("\n🎉 TIRAGE FINAL AGRÉGÉ GÉNÉRÉ! 🎉")
+    # The only print to stdout should be the JSON dump
+    print(json.dumps(output_dict))
 

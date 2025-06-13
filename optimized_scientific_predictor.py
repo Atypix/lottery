@@ -40,10 +40,10 @@ class OptimizedScientificPredictor:
     """
     
     def __init__(self):
-        print("🚀 SYSTÈME ML SCIENTIFIQUE OPTIMISÉ 🚀")
-        print("=" * 60)
-        print("Version rapide avec rigueur scientifique maintenue")
-        print("=" * 60)
+        # print("🚀 SYSTÈME ML SCIENTIFIQUE OPTIMISÉ 🚀")
+        # print("=" * 60)
+        # print("Version rapide avec rigueur scientifique maintenue")
+        # print("=" * 60)
         
         self.setup_environment()
         self.load_data()
@@ -62,8 +62,8 @@ class OptimizedScientificPredictor:
         
     def load_data(self):
         """Charge les données."""
-        print("📊 Chargement des données...")
-        
+        # print("📊 Chargement des données...") # Suppressed
+
         data_path_primary = 'data/euromillions_enhanced_dataset.csv'
         data_path_fallback = 'euromillions_enhanced_dataset.csv'
         actual_data_path = None
@@ -71,12 +71,12 @@ class OptimizedScientificPredictor:
             actual_data_path = data_path_primary
         elif os.path.exists(data_path_fallback):
             actual_data_path = data_path_fallback
-            print(f"ℹ️ Données chargées depuis {actual_data_path} (fallback)")
+            # print(f"ℹ️ Données chargées depuis {actual_data_path} (fallback)") # Suppressed
 
         if actual_data_path:
             self.df = pd.read_csv(actual_data_path)
         else:
-            print(f"❌ ERREUR: Fichier de données non trouvé ({data_path_primary} ou {data_path_fallback})")
+            # print(f"❌ ERREUR: Fichier de données non trouvé ({data_path_primary} ou {data_path_fallback})") # Suppressed
             self.df = pd.DataFrame() # Fallback
             if self.df.empty:
                 raise FileNotFoundError("Dataset not found, cannot proceed.")
@@ -87,7 +87,7 @@ class OptimizedScientificPredictor:
             with open(stat_results_path, 'r') as f:
                 self.statistical_results = json.load(f)
         except FileNotFoundError:
-            print(f"❌ Fichier de résultats statistiques non trouvé: {stat_results_path}")
+            # print(f"❌ Fichier de résultats statistiques non trouvé: {stat_results_path}") # Suppressed
             self.statistical_results = {} # Fallback to empty
         
         self.reference_draw = {
@@ -96,11 +96,11 @@ class OptimizedScientificPredictor:
             'date': '2025-06-06'
         }
         
-        print(f"✅ {len(self.df)} tirages chargés")
+        # print(f"✅ {len(self.df)} tirages chargés") # Suppressed
         
     def prepare_features(self):
         """Prépare les caractéristiques essentielles."""
-        print("🔍 Préparation des caractéristiques optimisées...")
+        # print("🔍 Préparation des caractéristiques optimisées...") # Suppressed
         
         features_data = []
         targets = []
@@ -118,7 +118,7 @@ class OptimizedScientificPredictor:
         self.X = pd.DataFrame(features_data)
         self.y = np.array(targets)
         
-        print(f"✅ Features: {self.X.shape}, Targets: {self.y.shape}")
+        # print(f"✅ Features: {self.X.shape}, Targets: {self.y.shape}") # Suppressed
         
     def extract_key_features(self, index, window_size):
         """Extrait les caractéristiques clés."""
@@ -176,7 +176,7 @@ class OptimizedScientificPredictor:
         
     def train_optimized_models(self):
         """Entraîne des modèles optimisés."""
-        print("🏋️ Entraînement des modèles optimisés...")
+        # print("🏋️ Entraînement des modèles optimisés...") # Suppressed
         
         # Sélection de features
         selector = SelectKBest(score_func=f_regression, k=self.config['n_features'])
@@ -208,7 +208,7 @@ class OptimizedScientificPredictor:
         tscv = TimeSeriesSplit(n_splits=self.config['cv_folds'])
         
         for name, model in models.items():
-            print(f"   Entraînement: {name}...")
+            # print(f"   Entraînement: {name}...") # Suppressed
             
             # Validation croisée
             cv_scores = cross_val_score(model, X_train, y_train, cv=tscv, scoring='r2')
@@ -231,7 +231,7 @@ class OptimizedScientificPredictor:
                 'test_mse': mse
             }
             
-            print(f"     ✅ R² = {r2:.3f}, MAE = {mae:.3f}")
+            # print(f"     ✅ R² = {r2:.3f}, MAE = {mae:.3f}") # Suppressed
         
         # Création de l'ensemble
         good_models = [(name, result['model']) for name, result in results.items() 
@@ -252,7 +252,7 @@ class OptimizedScientificPredictor:
                 'components': [name for name, _ in good_models]
             }
             
-            print(f"   ✅ Ensemble: R² = {ensemble_r2:.3f}, MAE = {ensemble_mae:.3f}")
+            # print(f"   ✅ Ensemble: R² = {ensemble_r2:.3f}, MAE = {ensemble_mae:.3f}") # Suppressed
         
         self.models = results
         self.scaler = scaler
@@ -263,7 +263,7 @@ class OptimizedScientificPredictor:
         
     def generate_scientific_prediction(self):
         """Génère la prédiction scientifique finale."""
-        print("🎯 Génération de la prédiction scientifique...")
+        # print("🎯 Génération de la prédiction scientifique...") # Suppressed
         
         # Features pour le dernier tirage
         last_index = len(self.df) - 1
@@ -429,7 +429,7 @@ class OptimizedScientificPredictor:
         
     def save_results(self, prediction):
         """Sauvegarde les résultats."""
-        print("💾 Sauvegarde des résultats...")
+        # print("💾 Sauvegarde des résultats...") # Suppressed
         
         # Résultats complets
         results = {
@@ -495,26 +495,26 @@ class OptimizedScientificPredictor:
         with open('results/scientific/optimized/ticket_scientifique.txt', 'w') as f:
             f.write(ticket)
         
-        print("✅ Résultats sauvegardés!")
+        # print("✅ Résultats sauvegardés!") # Suppressed
         
     def run_complete_analysis(self):
         """Exécute l'analyse complète."""
-        print("🚀 LANCEMENT DE L'ANALYSE SCIENTIFIQUE OPTIMISÉE 🚀")
-        print("=" * 70)
+        # print("🚀 LANCEMENT DE L'ANALYSE SCIENTIFIQUE OPTIMISÉE 🚀") # Suppressed
+        # print("=" * 70) # Suppressed
         
         # 1. Entraînement
-        print("📊 Phase 1: Entraînement des modèles...")
+        # print("📊 Phase 1: Entraînement des modèles...") # Suppressed
         self.train_optimized_models()
         
         # 2. Prédiction
-        print("🎯 Phase 2: Génération de la prédiction...")
+        # print("🎯 Phase 2: Génération de la prédiction...") # Suppressed
         prediction = self.generate_scientific_prediction()
         
         # 3. Sauvegarde
-        print("💾 Phase 3: Sauvegarde...")
+        # print("💾 Phase 3: Sauvegarde...") # Suppressed
         self.save_results(prediction)
         
-        print("✅ ANALYSE SCIENTIFIQUE TERMINÉE!")
+        # print("✅ ANALYSE SCIENTIFIQUE TERMINÉE!") # Suppressed
         return prediction
 
 if __name__ == "__main__":

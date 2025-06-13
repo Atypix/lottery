@@ -88,11 +88,11 @@ class EuromillionsPredictor:
             actual_data_file_to_use = self.data_path_primary
         elif os.path.exists(self.data_path_fallback):
             actual_data_file_to_use = self.data_path_fallback
-            print(f"ℹ️  Fichier de données trouvé dans le répertoire courant: {self.data_path_fallback}")
+            # print(f"ℹ️  Fichier de données trouvé dans le répertoire courant: {self.data_path_fallback}") # Suppressed
 
         if not actual_data_file_to_use:
-            print(f"❌ Fichier de données non trouvé ({self.data_path_primary} ou {self.data_path_fallback}).")
-            print("⚠️ Génération d'une prédiction aléatoire.")
+            # print(f"❌ Fichier de données non trouvé ({self.data_path_primary} ou {self.data_path_fallback}).") # Suppressed
+            # print("⚠️ Génération d'une prédiction aléatoire.") # Suppressed
             
             # Génération de numéros aléatoires
             main_numbers = sorted(random.sample(range(1, 51), 5))
@@ -131,9 +131,9 @@ class EuromillionsPredictor:
         # Chargement des données
         try:
             df = pd.read_csv(actual_data_file_to_use)
-            print(f"✅ Données chargées avec succès depuis {actual_data_file_to_use}: {len(df)} tirages.")
+            # print(f"✅ Données chargées avec succès depuis {actual_data_file_to_use}: {len(df)} tirages.") # Suppressed
         except Exception as e:
-            print(f"❌ Erreur lors du chargement des données depuis {actual_data_file_to_use}: {e}")
+            # print(f"❌ Erreur lors du chargement des données depuis {actual_data_file_to_use}: {e}") # Suppressed
             return None
         
         # Analyse statistique simple

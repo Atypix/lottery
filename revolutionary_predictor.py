@@ -9,11 +9,11 @@ Utilisation des données fraîches avec innovation totale
 import pandas as pd
 import numpy as np
 import json
-from datetime import datetime, timedelta, date # Added date
+from datetime import datetime, timedelta, date as datetime_date # Renamed date
 import warnings
-warnings.filterwarnings('ignore')
-
-from common.date_utils import get_next_euromillions_draw_date # Added
+import argparse # Added
+# json, os already imported by other path-corrected files
+from common.date_utils import get_next_euromillions_draw_date # Already Added
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.linear_model import BayesianRidge
 from sklearn.neural_network import MLPRegressor
@@ -26,19 +26,32 @@ class RevolutionaryPredictor:
     Prédicteur révolutionnaire qui sort complètement des sentiers battus
     """
     
-    def __init__(self):
-        print("🚀 PRÉDICTEUR RÉVOLUTIONNAIRE - HORS SENTIERS BATTUS 🚀")
-        print("=" * 60)
-        # print("🎯 Cible: Tirage du 10/06/2025") # Old static date
+    def __init__(self, target_date_obj=None): # Allow passing target_date_obj
+        # print("🚀 PRÉDICTEUR RÉVOLUTIONNAIRE - HORS SENTIERS BATTUS 🚀") # Suppressed
+        # print("=" * 60) # Suppressed
 
-        next_draw_date_obj = get_next_euromillions_draw_date("data/euromillions_enhanced_dataset.csv")
-        self.target_date = next_draw_date_obj.strftime('%d/%m/%Y') # Format as used before
-        self.dynamic_date_obj = next_draw_date_obj
+        if target_date_obj:
+            self.dynamic_date_obj = target_date_obj
+        else:
+            # Determine data_file_path for get_next_euromillions_draw_date
+            data_file_for_date_calc = "data/euromillions_enhanced_dataset.csv"
+            if not os.path.exists(data_file_for_date_calc): # os needs import
+                data_file_for_date_calc = "euromillions_enhanced_dataset.csv"
+                if not os.path.exists(data_file_for_date_calc):
+                    data_file_for_date_calc = None
+            self.dynamic_date_obj = get_next_euromillions_draw_date(data_file_for_date_calc)
 
-        print(f"🎯 Cible: Tirage du {self.target_date} (dynamically determined)")
-        print("💡 Innovation: Techniques jamais utilisées")
-        print("🔥 Révolution: Sortir de tous les patterns classiques")
-        print("=" * 60)
+        if self.dynamic_date_obj:
+            self.target_date = self.dynamic_date_obj.strftime('%d/%m/%Y') # Format as used before
+        else: # Fallback if date could not be determined
+            self.target_date = datetime.now().strftime('%d/%m/%Y')
+            self.dynamic_date_obj = datetime.now().date()
+
+
+        # print(f"🎯 Cible: Tirage du {self.target_date} (dynamically determined)") # Suppressed
+        # print("💡 Innovation: Techniques jamais utilisées") # Suppressed
+        # print("🔥 Révolution: Sortir de tous les patterns classiques") # Suppressed
+        # print("=" * 60) # Suppressed
         
         self.load_fresh_data()
         
@@ -570,28 +583,57 @@ def main():
     """
     Fonction principale révolutionnaire
     """
-    print("🚀 LANCEMENT DU PRÉDICTEUR RÉVOLUTIONNAIRE")
-    print("=" * 50)
-    print("💡 Mission: Sortir complètement des sentiers battus")
-    print("🎯 Objectif: Révolutionner la prédiction Euromillions")
-    print("🔥 Innovation: Techniques jamais utilisées auparavant")
-    print("=" * 50)
+    parser = argparse.ArgumentParser(description="Revolutionary Predictor for Euromillions.")
+    parser.add_argument("--date", type=str, help="Target draw date in YYYY-MM-DD format.")
+    args = parser.parse_args()
+
+    target_date_obj_for_init = None
+    target_date_str_for_output = None # This will be YYYY-MM-DD for JSON
+
+    data_file_for_date_calc = "data/euromillions_enhanced_dataset.csv"
+    if not os.path.exists(data_file_for_date_calc): # os needs import
+        data_file_for_date_calc = "euromillions_enhanced_dataset.csv"
+        if not os.path.exists(data_file_for_date_calc):
+            data_file_for_date_calc = None
+
+    if args.date:
+        try:
+            target_date_obj_for_init = datetime.strptime(args.date, '%Y-%m-%d').date()
+            target_date_str_for_output = args.date
+        except ValueError:
+            # print(f"Warning: Invalid date format for --date {args.date}. Using next logical date.", file=sys.stderr) # Suppressed
+            target_date_obj_for_init = get_next_euromillions_draw_date(data_file_for_date_calc)
+            target_date_str_for_output = target_date_obj_for_init.strftime('%Y-%m-%d') if target_date_obj_for_init else datetime.now().date().strftime('%Y-%m-%d')
+    else:
+        target_date_obj_for_init = get_next_euromillions_draw_date(data_file_for_date_calc)
+        target_date_str_for_output = target_date_obj_for_init.strftime('%Y-%m-%d') if target_date_obj_for_init else datetime.now().date().strftime('%Y-%m-%d')
+
+    # print("🚀 LANCEMENT DU PRÉDICTEUR RÉVOLUTIONNAIRE") # Suppressed
+    # ... other prints suppressed ...
+
+    predictor = RevolutionaryPredictor(target_date_obj=target_date_obj_for_init)
+    prediction_result = predictor.generate_revolutionary_prediction() # Contains numbers, stars, confidence, model_name, target_draw_date (DD/MM/YYYY)
     
-    predictor = RevolutionaryPredictor()
-    final_prediction = predictor.generate_revolutionary_prediction()
+    # print(f"\n🎉 RÉVOLUTION ACCOMPLIE !") # Suppressed
+    # print(f"🌟 Prédiction révolutionnaire générée avec succès !") # Suppressed
     
-    print(f"\n🎉 RÉVOLUTION ACCOMPLIE !")
-    print(f"🌟 Prédiction révolutionnaire générée avec succès !")
+    # Ensure target_draw_date is in YYYY-MM-DD for the final JSON
+    # The prediction_result['target_draw_date'] is DD/MM/YYYY from the script's internal logic
+    # We will use target_date_str_for_output which is already YYYY-MM-DD
     
-    return final_prediction
+    output_dict = {
+        "nom_predicteur": "revolutionary_predictor",
+        "numeros": prediction_result.get('numbers'),
+        "etoiles": prediction_result.get('stars'),
+        "date_tirage_cible": target_date_str_for_output,
+        "confidence": prediction_result.get('confidence'), # Already a float 0.0-1.0, can be scaled by display if needed
+        "categorie": "Revolutionnaire"
+    }
+    # No need to return from main, just print JSON
+    print(json.dumps(output_dict))
+
 
 if __name__ == "__main__":
-    prediction_output = main() # main() returns the final_prediction dict
-
-    print(f"\n🏆 PRÉDICTION RÉVOLUTIONNAIRE (from generate_revolutionary_prediction):")
-    print(f"Numéros: {prediction_output['numbers']}")
-    print(f"Étoiles: {prediction_output['stars']}")
-    # Confidence is a percentage like 0.85, display as is or format if needed
-    print(f"Confiance: {prediction_output.get('confidence')}")
-    print(f"Modèle: {prediction_output.get('model_name', 'N/A')}")
+    main() # main now handles argparse and prints JSON
+    # Original display prints are removed.
 

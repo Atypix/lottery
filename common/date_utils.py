@@ -1,7 +1,6 @@
 import pandas as pd
 from datetime import datetime, timedelta, date
-
-def get_next_euromillions_draw_date(data_file_path: str) -> date:
+import os # Added
     """
     Calculates the next Euromillions draw date.
     Euromillions draws are on Tuesdays and Fridays.
@@ -17,24 +16,44 @@ def get_next_euromillions_draw_date(data_file_path: str) -> date:
         The next Euromillions draw date as a datetime.date object.
     """
     latest_date_from_file = None
-    try:
-        df = pd.read_csv(data_file_path)
-        if 'Date' not in df.columns or df.empty:
-            print(f"Warning: 'Date' column not found or DataFrame empty in {data_file_path}. Defaulting to current date for latest_date_from_file.")
-            latest_date_from_file = datetime.now().date()
-        else:
-            df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
-            df.dropna(subset=['Date'], inplace=True)
-            if df.empty:
-                print(f"Warning: No valid dates in 'Date' column in {data_file_path} after parsing. Defaulting to current date for latest_date_from_file.")
-                latest_date_from_file = datetime.now().date()
+    original_path_arg = data_file_path # Keep original for messages
+
+    # Determine paths to try
+    path_in_data_subdir = None
+    # Check if data_file_path is a simple filename (no directory part)
+    if os.path.basename(data_file_path) == data_file_path:
+        path_in_data_subdir = os.path.join("data", data_file_path)
+
+    paths_to_try = []
+    if path_in_data_subdir:
+        paths_to_try.append(path_in_data_subdir)
+    paths_to_try.append(data_file_path) # Original path (could be absolute or relative)
+
+    df_loaded = False
+    for path_attempt in paths_to_try:
+        try:
+            df = pd.read_csv(path_attempt)
+            if 'Date' not in df.columns or df.empty:
+                print(f"Warning: 'Date' column not found or DataFrame empty in {path_attempt}. Trying next path or defaulting.")
+                # Don't set latest_date_from_file here, let loop continue or fall to final default
             else:
-                latest_date_from_file = df['Date'].max().date()
-    except FileNotFoundError:
-        print(f"Warning: Data file {data_file_path} not found. Defaulting to current date for latest_date_from_file.")
-        latest_date_from_file = datetime.now().date()
-    except Exception as e:
-        print(f"Error reading or parsing {data_file_path}: {e}. Defaulting to current date for latest_date_from_file.")
+                df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
+                df.dropna(subset=['Date'], inplace=True)
+                if df.empty:
+                    print(f"Warning: No valid dates in 'Date' column in {path_attempt} after parsing. Trying next path or defaulting.")
+                else:
+                    latest_date_from_file = df['Date'].max().date()
+                    print(f"Info: Successfully loaded and parsed dates from {path_attempt}")
+                    df_loaded = True
+                    break # Exit loop on successful load and parse
+        except FileNotFoundError:
+            print(f"Info: Data file {path_attempt} not found. Trying next path or defaulting.")
+        except Exception as e:
+            print(f"Error reading or parsing {path_attempt}: {e}. Trying next path or defaulting.")
+            # Potentially set self.df to None or handle more explicitly if this class had state
+
+    if not df_loaded:
+        print(f"Warning: Could not load data from any attempted path ({', '.join(paths_to_try)}). Defaulting to current date for latest_date_from_file determination.")
         latest_date_from_file = datetime.now().date()
 
     current_search_date = datetime.now().date()

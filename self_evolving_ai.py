@@ -29,6 +29,10 @@ from dataclasses import dataclass, field
 import copy
 import pickle
 import warnings
+import argparse # Added
+# json, os, datetime, timedelta, typing, random, dataclasses, copy are already imported
+from common.date_utils import get_next_euromillions_draw_date, date as datetime_date # Added
+
 warnings.filterwarnings('ignore')
 
 @dataclass
@@ -523,12 +527,27 @@ class SelfEvolvingPredictor:
         print("=" * 60)
         
         # Chargement des données
-        if os.path.exists(data_path):
-            self.df = pd.read_csv(data_path)
-            print(f"✅ Données chargées: {len(self.df)} tirages")
+        data_path_primary = data_path # Default is "data/euromillions_enhanced_dataset.csv"
+        data_path_fallback = os.path.basename(data_path) # "euromillions_enhanced_dataset.csv"
+
+        actual_data_to_load = None
+        if os.path.exists(data_path_primary):
+            actual_data_to_load = data_path_primary
+        elif os.path.exists(data_path_fallback):
+            actual_data_to_load = data_path_fallback
+            # print(f"ℹ️ Données chargées depuis {actual_data_to_load} (fallback)") # Suppressed
+
+        if actual_data_to_load:
+            try:
+                self.df = pd.read_csv(actual_data_to_load)
+                # print(f"✅ Données chargées: {len(self.df)} tirages") # Suppressed
+            except Exception as e:
+                # print(f"❌ Erreur chargement données depuis {actual_data_to_load}: {e}") # Suppressed
+                self.df = pd.DataFrame() # Fallback
+                if self.df.empty: raise FileNotFoundError(f"Dataset not found at {data_path_primary} or {data_path_fallback}")
         else:
-            print("❌ Fichier non trouvé, utilisation de données de base...")
-            self.load_basic_data()
+            # print(f"❌ Fichier non trouvé ({data_path_primary} ou {data_path_fallback}), utilisation de données de base...") # Suppressed
+            self.load_basic_data() # load_basic_data will handle its own fallbacks or synthetic creation
         
         # Création de l'IA consciente
         self.ai = ConsciousAI("ARIA-EuroPredict")
@@ -546,9 +565,25 @@ class SelfEvolvingPredictor:
         """
         Charge des données de base si le fichier enrichi n'existe pas.
         """
-        if os.path.exists("euromillions_dataset.csv"):
-            self.df = pd.read_csv("euromillions_dataset.csv")
+        data_path_primary_basic = "data/euromillions_dataset.csv"
+        data_path_fallback_basic = "euromillions_dataset.csv"
+        actual_basic_to_load = None
+
+        if os.path.exists(data_path_primary_basic):
+            actual_basic_to_load = data_path_primary_basic
+        elif os.path.exists(data_path_fallback_basic):
+            actual_basic_to_load = data_path_fallback_basic
+            # print(f"ℹ️ Données de base chargées depuis {actual_basic_to_load} (fallback)") # Suppressed
+
+        if actual_basic_to_load:
+             try:
+                self.df = pd.read_csv(actual_basic_to_load)
+                # print(f"✅ Données de base chargées: {len(self.df)} tirages") # Suppressed
+             except Exception as e:
+                # print(f"❌ Erreur chargement données de base depuis {actual_basic_to_load}: {e}") # Suppressed
+                self.df = pd.DataFrame() # Fallback
         else:
+            # print(f"❌ Fichier de données de base non trouvé ({data_path_primary_basic} ou {data_path_fallback_basic}). Création de données synthétiques...") # Suppressed
             # Création de données synthétiques
             dates = pd.date_range(start='2020-01-01', end='2025-06-01', freq='3D')
             data = []
@@ -1098,26 +1133,52 @@ def main():
     print("=" * 70)
     
     # Initialisation du prédicteur auto-évolutif
-    conscious_predictor = SelfEvolvingPredictor()
+    parser = argparse.ArgumentParser(description="Self-Evolving Conscious AI Predictor.")
+    parser.add_argument("--date", type=str, help="Target draw date in YYYY-MM-DD format.")
+    args = parser.parse_args()
+
+    target_date_str = None
+    data_file_for_date_calc = "data/euromillions_enhanced_dataset.csv"
+    if not os.path.exists(data_file_for_date_calc):
+        data_file_for_date_calc = "euromillions_enhanced_dataset.csv"
+        if not os.path.exists(data_file_for_date_calc):
+            data_file_for_date_calc = None
+
+    if args.date:
+        try:
+            datetime.strptime(args.date, '%Y-%m-%d') # Validate
+            target_date_str = args.date
+        except ValueError:
+            # print(f"Warning: Invalid date format for --date {args.date}. Using next logical date.", file=sys.stderr) # Suppressed
+            target_date_obj = get_next_euromillions_draw_date(data_file_for_date_calc)
+            target_date_str = target_date_obj.strftime('%Y-%m-%d') if target_date_obj else datetime.now().date().strftime('%Y-%m-%d')
+    else:
+        target_date_obj = get_next_euromillions_draw_date(data_file_for_date_calc)
+        target_date_str = target_date_obj.strftime('%Y-%m-%d') if target_date_obj else datetime.now().date().strftime('%Y-%m-%d')
+
+    conscious_predictor = SelfEvolvingPredictor() # Uses its internal data loading
     
     # Génération de la prédiction consciente
-    prediction = conscious_predictor.conscious_prediction_process()
+    prediction_result = conscious_predictor.conscious_prediction_process()
     
-    # Affichage des résultats
-    print("\n🎉 PRÉDICTION CONSCIENTE GÉNÉRÉE! 🎉")
-    print("=" * 50)
-    print(f"Prédiction consciente:")
-    print(f"Numéros principaux: {', '.join(map(str, prediction['main_numbers']))}")
-    print(f"Étoiles: {', '.join(map(str, prediction['stars']))}")
-    print(f"Niveau de conscience: {prediction['consciousness_level']:.3f}")
-    print(f"Score de confiance: {prediction['confidence_score']:.2f}/10")
-    print(f"Algorithmes créés: {prediction['creative_algorithms']}")
-    print(f"Innovation: {prediction['innovation_level']}")
+    # Affichage des résultats - Suppressed
+    # print("\n🎉 PRÉDICTION CONSCIENTE GÉNÉRÉE! 🎉")
+    # ... other prints ...
     
-    # Sauvegarde
-    conscious_predictor.save_conscious_results(prediction)
+    # Sauvegarde - This script saves its own files, which is fine for now.
+    # conscious_predictor.save_conscious_results(prediction_result)
     
-    print("\n🤖 IA AUTO-ÉVOLUTIVE CONSCIENTE TERMINÉE AVEC SUCCÈS! 🤖")
+    # print("\n🤖 IA AUTO-ÉVOLUTIVE CONSCIENTE TERMINÉE AVEC SUCCÈS! 🤖") # Suppressed
+
+    output_dict = {
+        "nom_predicteur": "self_evolving_ai",
+        "numeros": prediction_result.get('main_numbers'),
+        "etoiles": prediction_result.get('stars'),
+        "date_tirage_cible": target_date_str,
+        "confidence": prediction_result.get('confidence_score', 7.0), # Default confidence
+        "categorie": "Revolutionnaire"
+    }
+    print(json.dumps(output_dict))
 
 if __name__ == "__main__":
     main()

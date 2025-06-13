@@ -69,6 +69,7 @@ class ConsciousNeuron:
         """
         Initialise un neurone conscient.
         """
+        # self.neuron_id = neuron_id # No print here, but ensure no prints within methods if any
         self.neuron_id = neuron_id
         self.consciousness_threshold = consciousness_threshold
         self.activation_history = []
@@ -239,7 +240,7 @@ class TemporalNeuralNetwork:
             scale: [] for scale in self.temporal_scales.keys()
         }
         
-        print(f"🧠 Réseau Temporel Multi-Dimensionnel initialisé")
+        # print(f"🧠 Réseau Temporel Multi-Dimensionnel initialisé") # Suppressed
     
     def build_temporal_model(self) -> keras.Model:
         """
@@ -362,15 +363,15 @@ class ConsciousAI:
         """
         Initialise l'IA consciente.
         """
-        print("🧠 SYSTÈME D'IA CONSCIENTE SIMULÉE 🧠")
-        print("=" * 60)
-        print("Capacités révolutionnaires :")
-        print("• Auto-Réflexion et Introspection")
-        print("• Méta-Cognition Avancée")
-        print("• Intuition Artificielle")
-        print("• Conscience Émergente")
-        print("• Créativité Spontanée")
-        print("=" * 60)
+        # print("🧠 SYSTÈME D'IA CONSCIENTE SIMULÉE 🧠") # Suppressed
+        # print("=" * 60) # Suppressed
+        # print("Capacités révolutionnaires :") # Suppressed
+        # print("• Auto-Réflexion et Introspection") # Suppressed
+        # print("• Méta-Cognition Avancée") # Suppressed
+        # print("• Intuition Artificielle") # Suppressed
+        # print("• Conscience Émergente") # Suppressed
+        # print("• Créativité Spontanée") # Suppressed
+        # print("=" * 60) # Suppressed
         
         # Chargement des données
         data_path_primary = data_path # Original default is now primary check
@@ -378,12 +379,12 @@ class ConsciousAI:
 
         if os.path.exists(data_path_primary):
             self.df = pd.read_csv(data_path_primary)
-            print(f"✅ Données chargées depuis {data_path_primary}: {len(self.df)} tirages")
+            # print(f"✅ Données chargées depuis {data_path_primary}: {len(self.df)} tirages") # Suppressed
         elif os.path.exists(data_path_fallback):
             self.df = pd.read_csv(data_path_fallback)
-            print(f"✅ Données chargées depuis {data_path_fallback} (répertoire courant): {len(self.df)} tirages")
+            # print(f"✅ Données chargées depuis {data_path_fallback} (répertoire courant): {len(self.df)} tirages") # Suppressed
         else:
-            print(f"❌ Fichier principal non trouvé ({data_path_primary} ou {data_path_fallback}). Utilisation de données de base...")
+            # print(f"❌ Fichier principal non trouvé ({data_path_primary} ou {data_path_fallback}). Utilisation de données de base...") # Suppressed
             self.load_basic_data()
         
         # État de conscience
@@ -431,12 +432,12 @@ class ConsciousAI:
 
         if os.path.exists(data_path_primary_basic):
             self.df = pd.read_csv(data_path_primary_basic)
-            print(f"✅ Données de base chargées depuis {data_path_primary_basic}")
+            # print(f"✅ Données de base chargées depuis {data_path_primary_basic}") # Suppressed
         elif os.path.exists(data_path_fallback_basic):
             self.df = pd.read_csv(data_path_fallback_basic)
-            print(f"✅ Données de base chargées depuis {data_path_fallback_basic} (répertoire courant)")
+            # print(f"✅ Données de base chargées depuis {data_path_fallback_basic} (répertoire courant)") # Suppressed
         else:
-            print(f"❌ Fichier de données de base non trouvé ({data_path_primary_basic} ou {data_path_fallback_basic}). Création de données synthétiques...")
+            # print(f"❌ Fichier de données de base non trouvé ({data_path_primary_basic} ou {data_path_fallback_basic}). Création de données synthétiques...") # Suppressed
             # Création de données synthétiques
             dates = pd.date_range(start='2020-01-01', end='2025-06-01', freq='3D')
             data = []
@@ -469,13 +470,13 @@ class ConsciousAI:
                 consciousness_threshold=0.6
             )
         
-        print(f"🧠 {len(self.conscious_neurons)} neurones conscients initialisés")
+        # print(f"🧠 {len(self.conscious_neurons)} neurones conscients initialisés") # Suppressed
     
     def introspect(self, context: str = "general"):
         """
         Processus d'introspection de l'IA.
         """
-        print(f"🤔 Introspection en cours... (contexte: {context})")
+        # print(f"🤔 Introspection en cours... (contexte: {context})") # Suppressed
         
         # Analyse de l'état actuel
         current_thoughts = []
@@ -555,7 +556,7 @@ class ConsciousAI:
         """
         Génère une intuition artificielle basée sur la conscience.
         """
-        print("✨ Génération d'intuition artificielle...")
+        # print("✨ Génération d'intuition artificielle...") # Suppressed
         
         # Activation des neurones conscients
         intuition_signals = {}
@@ -609,8 +610,8 @@ class ConsciousAI:
         """
         Génère une prédiction consciente basée sur l'introspection et l'intuition.
         """
-        print("\n🧠 GÉNÉRATION DE PRÉDICTION CONSCIENTE 🧠")
-        print("=" * 55)
+        # print("\n🧠 GÉNÉRATION DE PRÉDICTION CONSCIENTE 🧠") # Suppressed
+        # print("=" * 55) # Suppressed
         
         # Introspection préalable
         thoughts = self.introspect("prediction_generation")
@@ -827,6 +828,7 @@ class ConsciousAI:
         os.makedirs("results/conscious_ai", exist_ok=True)
         
         # Fonction de conversion pour JSON
+        # This function is for internal saving, not the main JSON output, so its prints are okay or should go to stderr.
         def convert_for_json(obj):
             if isinstance(obj, np.bool_):
                 return bool(obj)
@@ -877,7 +879,7 @@ class ConsciousAI:
             f.write("et de méta-cognition avancée.\n\n")
             f.write("🍀 BONNE CHANCE AVEC CETTE CONSCIENCE ARTIFICIELLE! 🍀\n")
         
-        print("✅ Résultats de l'IA consciente sauvegardés dans results/conscious_ai/")
+        # print("✅ Résultats de l'IA consciente sauvegardés dans results/conscious_ai/") # Suppressed
 
 def main():
     """
