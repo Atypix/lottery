@@ -514,7 +514,7 @@ class ChaosFractalPredictor:
         # Chargement des données
         if os.path.exists(data_path): # Checks "data/euromillions_enhanced_dataset.csv"
             self.df = pd.read_csv(data_path)
-            print(f"✅ Données chargées depuis {data_path}: {len(self.df)} tirages")
+            # print(f"✅ Données chargées depuis {data_path}: {len(self.df)} tirages")
         elif os.path.exists("euromillions_enhanced_dataset.csv"): # Fallback to current dir
             self.df = pd.read_csv("euromillions_enhanced_dataset.csv")
             # print(f"✅ Données chargées depuis le répertoire courant (euromillions_enhanced_dataset.csv): {len(self.df)} tirages") # Suppressed
@@ -529,7 +529,7 @@ class ChaosFractalPredictor:
         # Préparation des séries temporelles
         self.prepare_time_series()
         
-        print("✅ Système Chaos-Fractal initialisé!")
+        # print("✅ Système Chaos-Fractal initialisé!")
     
     def load_basic_data(self):
         """
@@ -985,16 +985,16 @@ def main():
     """
     Fonction principale pour exécuter l'analyse chaos-fractale.
     """
-    print("🌀 SYSTÈME RÉVOLUTIONNAIRE CHAOS-FRACTAL EUROMILLIONS 🌀")
-    print("=" * 70)
-    print("Techniques révolutionnaires implémentées:")
-    print("• Analyse de Dimension Fractale (Box-counting)")
-    print("• Exposant de Hurst et Auto-Similarité")
-    print("• Reconstruction d'Espace de Phase (Takens)")
-    print("• Exposants de Lyapunov et Attracteurs Étranges")
-    print("• Prédiction Chaotique par Voisinage")
-    print("• Fusion Chaos-Fractale Révolutionnaire")
-    print("=" * 70)
+    # print("🌀 SYSTÈME RÉVOLUTIONNAIRE CHAOS-FRACTAL EUROMILLIONS 🌀")
+    # print("=" * 70)
+    # print("Techniques révolutionnaires implémentées:")
+    # print("• Analyse de Dimension Fractale (Box-counting)")
+    # print("• Exposant de Hurst et Auto-Similarité")
+    # print("• Reconstruction d'Espace de Phase (Takens)")
+    # print("• Exposants de Lyapunov et Attracteurs Étranges")
+    # print("• Prédiction Chaotique par Voisinage")
+    # print("• Fusion Chaos-Fractale Révolutionnaire")
+    # print("=" * 70)
     
     # Initialisation
     parser = argparse.ArgumentParser(description="Chaos Fractal Predictor for Euromillions.")
@@ -1034,12 +1034,21 @@ def main():
     
     # print("\n🌀 ANALYSE CHAOS-FRACTALE TERMINÉE AVEC SUCCÈS! 🌀") # Suppressed
 
+    raw_numeros = prediction_result.get('main_numbers', [])
+    raw_etoiles = prediction_result.get('stars', [])
+    raw_confidence = prediction_result.get('confidence_score', 6.0) # Default is 6.0
+
+    # Convert to Python native types
+    py_numeros = [int(n) for n in raw_numeros] if raw_numeros else []
+    py_etoiles = [int(s) for s in raw_etoiles] if raw_etoiles else []
+    py_confidence = float(raw_confidence) # raw_confidence will be a number due to default
+
     output_dict = {
         "nom_predicteur": "chaos_fractal_predictor",
-        "numeros": prediction_result.get('main_numbers'),
-        "etoiles": prediction_result.get('stars'),
+        "numeros": py_numeros,
+        "etoiles": py_etoiles,
         "date_tirage_cible": target_date_str,
-        "confidence": prediction_result.get('confidence_score', 6.0), # Default confidence
+        "confidence": py_confidence,
         "categorie": "Revolutionnaire"
     }
     print(json.dumps(output_dict))
