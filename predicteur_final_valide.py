@@ -17,6 +17,7 @@ import json
 from datetime import datetime, date as datetime_date # Renamed date to datetime_date
 import warnings
 import argparse # Added
+import os # Added
 # json is already imported
 from common.date_utils import get_next_euromillions_draw_date # Already Added
 from sklearn.linear_model import BayesianRidge
