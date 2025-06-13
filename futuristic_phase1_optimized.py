@@ -28,10 +28,10 @@ class OptimizedFuturisticAI:
     """
     
     def __init__(self):
-        print("🌌 PHASE FUTURISTE 1 OPTIMISÉE: IA QUANTIQUE ET CONSCIENCE 🌌")
-        print("=" * 70)
-        print("Technologies d'avant-garde optimisées pour transcender la perfection")
-        print("=" * 70)
+        # print("🌌 PHASE FUTURISTE 1 OPTIMISÉE: IA QUANTIQUE ET CONSCIENCE 🌌")
+        # print("=" * 70)
+        # print("Technologies d'avant-garde optimisées pour transcender la perfection")
+        # print("=" * 70)
         
         self.setup_environment()
         self.load_data()
@@ -56,7 +56,7 @@ class OptimizedFuturisticAI:
             'intuition_weight': 0.25
         }
         
-        print("✅ Environnement futuriste optimisé!")
+        # print("✅ Environnement futuriste optimisé!")
         
     def load_data(self):
         """Charge les données."""
@@ -92,7 +92,7 @@ class OptimizedFuturisticAI:
         
     def quantum_prediction(self):
         """Génère une prédiction quantique optimisée."""
-        print("⚛️ Calcul quantique optimisé...")
+        # print("⚛️ Calcul quantique optimisé...")
         
         # Simulation quantique simplifiée mais efficace
         recent_data = []
@@ -157,7 +157,7 @@ class OptimizedFuturisticAI:
         
     def consciousness_prediction(self):
         """Génère une prédiction par conscience artificielle."""
-        print("🧠 Conscience artificielle optimisée...")
+        # print("🧠 Conscience artificielle optimisée...")
         
         # Simulation de conscience
         awareness_state = 'enlightened'  # État élevé par défaut
@@ -226,7 +226,7 @@ class OptimizedFuturisticAI:
         
     def evolutionary_prediction(self):
         """Génère une prédiction évolutive optimisée."""
-        print("🧬 Évolution optimisée...")
+        # print("🧬 Évolution optimisée...")
         
         # Simulation d'évolution rapide
         generations = 10
@@ -355,7 +355,7 @@ class OptimizedFuturisticAI:
         
     def fuse_predictions(self, quantum_pred, consciousness_pred, evolutionary_pred):
         """Fusionne les prédictions futuristes."""
-        print("🌌 Fusion futuriste...")
+        # print("🌌 Fusion futuriste...")
         
         # Pondération
         weights = {'quantum': 0.4, 'consciousness': 0.35, 'evolutionary': 0.25}
@@ -457,17 +457,17 @@ class OptimizedFuturisticAI:
         
     def run_futuristic_phase1(self):
         """Exécute la Phase Futuriste 1 optimisée."""
-        print("🚀 LANCEMENT PHASE FUTURISTE 1 OPTIMISÉE 🚀")
-        print("=" * 60)
+        # print("🚀 LANCEMENT PHASE FUTURISTE 1 OPTIMISÉE 🚀")
+        # print("=" * 60)
         
         # Prédictions futuristes
         quantum_pred = self.quantum_prediction()
         consciousness_pred = self.consciousness_prediction()
         evolutionary_pred = self.evolutionary_prediction()
         
-        print(f"✅ Prédiction quantique: {quantum_pred['numbers']} + {quantum_pred['stars']}")
-        print(f"✅ Prédiction consciente: {consciousness_pred['numbers']} + {consciousness_pred['stars']}")
-        print(f"✅ Prédiction évolutive: {evolutionary_pred['numbers']} + {evolutionary_pred['stars']}")
+        # print(f"✅ Prédiction quantique: {quantum_pred['numbers']} + {quantum_pred['stars']}")
+        # print(f"✅ Prédiction consciente: {consciousness_pred['numbers']} + {consciousness_pred['stars']}")
+        # print(f"✅ Prédiction évolutive: {evolutionary_pred['numbers']} + {evolutionary_pred['stars']}")
         
         # Fusion
         futuristic_fusion = self.fuse_predictions(quantum_pred, consciousness_pred, evolutionary_pred)
@@ -478,18 +478,18 @@ class OptimizedFuturisticAI:
         # Sauvegarde
         self.save_results(futuristic_fusion, validation)
         
-        print(f"\n🏆 RÉSULTATS FUTURISTES 🏆")
-        print("=" * 40)
-        print(f"Score futuriste: {futuristic_fusion['futuristic_score']:.2f}/15")
-        print(f"Niveau tech: {validation['tech_level']}")
-        print(f"Correspondances: {validation['exact_matches']}/7")
-        print(f"Précision: {validation['precision_rate']:.1f}%")
+        # print(f"\n🏆 RÉSULTATS FUTURISTES 🏆")
+        # print("=" * 40)
+        # print(f"Score futuriste: {futuristic_fusion['futuristic_score']:.2f}/15")
+        # print(f"Niveau tech: {validation['tech_level']}")
+        # print(f"Correspondances: {validation['exact_matches']}/7")
+        # print(f"Précision: {validation['precision_rate']:.1f}%")
         
-        print(f"\n🎯 PRÉDICTION FUTURISTE:")
-        print(f"Numéros: {', '.join(map(str, futuristic_fusion['numbers']))}")
-        print(f"Étoiles: {', '.join(map(str, futuristic_fusion['stars']))}")
+        # print(f"\n🎯 PRÉDICTION FUTURISTE:")
+        # print(f"Numéros: {', '.join(map(str, futuristic_fusion['numbers']))}")
+        # print(f"Étoiles: {', '.join(map(str, futuristic_fusion['stars']))}")
         
-        print("\n✅ PHASE FUTURISTE 1 TERMINÉE!")
+        # print("\n✅ PHASE FUTURISTE 1 TERMINÉE!")
         
         return futuristic_fusion
         
@@ -566,13 +566,21 @@ if __name__ == "__main__":
     confidence_value = prediction_result.get('futuristic_score', 0)
     normalized_confidence = min(10.0, (confidence_value / 15.0) * 10.0) if isinstance(confidence_value, (int, float)) else 7.0
 
+    # Ensure JSON serializable types
+    raw_numeros = prediction_result.get('numbers', [])
+    raw_etoiles = prediction_result.get('stars', [])
+    # normalized_confidence is already calculated above
+
+    py_numeros = [int(n) for n in raw_numeros] if raw_numeros else []
+    py_etoiles = [int(s) for s in raw_etoiles] if raw_etoiles else []
+    py_confidence = float(normalized_confidence) # Ensure it's a Python float
 
     output_dict = {
         "nom_predicteur": "futuristic_phase1_optimized",
-        "numeros": prediction_result.get('numbers'),
-        "etoiles": prediction_result.get('stars'),
+        "numeros": py_numeros,
+        "etoiles": py_etoiles,
         "date_tirage_cible": target_date_str,
-        "confidence": normalized_confidence,
+        "confidence": py_confidence,
         "categorie": "Revolutionnaire"
     }
     print(json.dumps(output_dict))
