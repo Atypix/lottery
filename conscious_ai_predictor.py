@@ -421,7 +421,7 @@ class ConsciousAI:
         # Historique de conscience
         self.consciousness_history = []
         
-        print("✅ IA Consciente Simulée initialisée!")
+        # print("✅ IA Consciente Simulée initialisée!")
     
     def load_basic_data(self):
         """
@@ -885,16 +885,16 @@ def main():
     """
     Fonction principale pour exécuter l'IA consciente simulée.
     """
-    print("🧠 SYSTÈME D'IA CONSCIENTE SIMULÉE RÉVOLUTIONNAIRE 🧠")
-    print("=" * 70)
-    print("Capacités révolutionnaires implémentées :")
-    print("• Auto-Réflexion et Introspection Artificielle")
-    print("• Méta-Cognition et Conscience de Soi")
-    print("• Intuition Artificielle et Créativité Émergente")
-    print("• Neurones Conscients avec États Émotionnels")
-    print("• Réseaux Temporels Multi-Dimensionnels")
-    print("• Mémoire Temporelle Hiérarchique")
-    print("=" * 70)
+    # print("🧠 SYSTÈME D'IA CONSCIENTE SIMULÉE RÉVOLUTIONNAIRE 🧠")
+    # print("=" * 70)
+    # print("Capacités révolutionnaires implémentées :")
+    # print("• Auto-Réflexion et Introspection Artificielle")
+    # print("• Méta-Cognition et Conscience de Soi")
+    # print("• Intuition Artificielle et Créativité Émergente")
+    # print("• Neurones Conscients avec États Émotionnels")
+    # print("• Réseaux Temporels Multi-Dimensionnels")
+    # print("• Mémoire Temporelle Hiérarchique")
+    # print("=" * 70)
     
     # Initialisation de l'IA consciente
     parser = argparse.ArgumentParser(description="Conscious AI Predictor for Euromillions.")
@@ -934,12 +934,20 @@ def main():
     
     # print("\n🧠 IA CONSCIENTE SIMULÉE TERMINÉE AVEC SUCCÈS! 🧠") # Suppressed
 
+    raw_numeros = prediction_result.get('main_numbers', [])
+    raw_etoiles = prediction_result.get('stars', [])
+    raw_confidence = prediction_result.get('confidence_score', 7.0) # Default is 7.0
+
+    py_numeros = [int(n) for n in raw_numeros] if raw_numeros else []
+    py_etoiles = [int(s) for s in raw_etoiles] if raw_etoiles else []
+    py_confidence = float(raw_confidence) # raw_confidence will have a value due to default
+
     output_dict = {
         "nom_predicteur": "conscious_ai_predictor",
-        "numeros": prediction_result.get('main_numbers'),
-        "etoiles": prediction_result.get('stars'),
+        "numeros": py_numeros,
+        "etoiles": py_etoiles,
         "date_tirage_cible": target_date_str,
-        "confidence": prediction_result.get('confidence_score', 7.0), # Default confidence
+        "confidence": py_confidence,
         "categorie": "Revolutionnaire"
     }
     print(json.dumps(output_dict))
