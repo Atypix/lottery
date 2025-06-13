@@ -6,7 +6,7 @@ Script pour prédire les numéros de l'Euromillions en utilisant un modèle Tens
 import os
 import sys
 import argparse
-# import tensorflow as tf # Keep for load_model, comment out if not directly used
+import tensorflow as tf # Keep for load_model, comment out if not directly used
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
@@ -25,24 +25,12 @@ def load_models(models_dir):
     Returns:
         Tuple (modèle pour les numéros principaux, modèle pour les étoiles)
     """
-    # Trouver les répertoires des modèles les plus récents
-    main_model_dirs = [d for d in os.listdir(models_dir) if d.endswith('_main')]
-    stars_model_dirs = [d for d in os.listdir(models_dir) if d.endswith('_stars')]
-    
-    if not main_model_dirs or not stars_model_dirs:
-        print("Erreur : Modèles non trouvés. Veuillez d'abord entraîner les modèles.")
-        sys.exit(1)
-    
-    # Trier par date pour obtenir le plus récent
-    main_model_dir = sorted(main_model_dirs)[-1]
-    stars_model_dir = sorted(stars_model_dirs)[-1]
-    
-    # Charger les modèles
-    main_model_path = os.path.join(models_dir, main_model_dir, "final_model.h5")
-    stars_model_path = os.path.join(models_dir, stars_model_dir, "final_model.h5")
+    # Define model paths directly
+    main_model_path = os.path.join(models_dir, "tf_main_std", "final_model.h5")
+    stars_model_path = os.path.join(models_dir, "tf_stars_std", "final_model.h5")
     
     if not os.path.exists(main_model_path) or not os.path.exists(stars_model_path):
-        print("Erreur : Fichiers de modèle non trouvés. Veuillez d'abord entraîner les modèles.")
+        print("Erreur : Fichiers de modèle (tf_main_std/final_model.h5 or tf_stars_std/final_model.h5) non trouvés dans le répertoire des modèles. Veuillez d'abord entraîner les modèles.") # Modified error message
         sys.exit(1)
     
     main_model = tf.keras.models.load_model(main_model_path)
