@@ -222,9 +222,15 @@ def run_consensus_by_frequency_prediction(selected_model_names: list = None): # 
             try:
                 prediction_data = json.loads(process.stdout.strip())
                 if _validate_prediction_data(prediction_data, script_name):
-                    # Augment with category from config to ensure it's there
-                    prediction_data['category_from_config'] = script_config['category']
-                    successful_predictions.append(prediction_data)
+                    processed_data = {
+                        'name': prediction_data.get('nom_predicteur', script_config['name']),
+                        'category': script_config['category'],
+                        'target_date': prediction_data.get('date_tirage_cible'),
+                        'numbers': prediction_data.get('numeros'),
+                        'stars': prediction_data.get('etoiles'),
+                        'confidence': prediction_data.get('confidence')
+                    }
+                    successful_predictions.append(processed_data)
                     print(f"  ✅ {script_name}: Prédiction valide collectée.")
                 else:
                     failed_predictors.append({'name': script_name, 'reason': 'Format de données de prédiction invalide.'})
@@ -243,36 +249,58 @@ def run_consensus_by_frequency_prediction(selected_model_names: list = None): # 
             print(f"Erreur inattendue lors de l'exécution de {script_name}: {e}", file=sys.stderr)
             failed_predictors.append({'name': script_name, 'reason': f"Erreur inattendue: {str(e)}"})
 
-    print("\n--- Récapitulatif des Prédictions du Consensus ---")
-    if not successful_predictions:
-        print("Aucune prédiction n'a pu être collectée avec succès.")
-    else:
-        # Group by category
-        grouped_predictions = {}
-        for pred in successful_predictions:
-            category = pred.get('category_from_config', pred.get('categorie', 'Inconnue')) # Prioritize config category
-            if category not in grouped_predictions:
-                grouped_predictions[category] = []
-            grouped_predictions[category].append(pred)
+    # New printing logic for successful predictions
+    if successful_predictions:
+        print("\n--- ✅ Successful Predictor Results ---")
+        for pred_data in successful_predictions:
+            print("-----------------------------------")
+            name = pred_data.get('name', 'N/A')
+            category = pred_data.get('category', 'N/A')
+            target_date = pred_data.get('target_date', 'N/A')
+            numbers = pred_data.get('numbers', [])
+            stars = pred_data.get('stars', [])
+            confidence = pred_data.get('confidence')
 
-        for category, preds_in_category in grouped_predictions.items():
-            print(f"\n--- Catégorie: {category} ({len(preds_in_category)} prédictions) ---")
-            for pred in preds_in_category:
-                nom = pred.get('nom_predicteur', 'N/A')
-                nums = pred.get('numeros', [])
-                etoiles = pred.get('etoiles', [])
-                conf = pred.get('confidence')
-                conf_str = f"{conf:.2f}/10" if isinstance(conf, (float, int)) else "N/A"
-                print(f"  {nom}: Numéros={nums}, Étoiles={etoiles}, Confiance={conf_str}")
+            numbers_str = ', '.join(map(str, numbers)) if numbers else "N/A"
+            stars_str = ', '.join(map(str, stars)) if stars else "N/A"
+
+            confidence_str = "N/A"
+            if confidence is not None:
+                if isinstance(confidence, float):
+                    confidence_str = f"{confidence:.1f}" # Basic float formatting
+                else:
+                    confidence_str = str(confidence)
+
+            print(f"  Predictor:    {name}")
+            print(f"  Category:     {category}")
+            print(f"  Target Date:  {target_date}")
+            print(f"  Numbers:      {numbers_str}")
+            print(f"  Stars:        {stars_str}")
+            print(f"  Confidence:   {confidence_str}")
+        print("-----------------------------------") # Final separator
+    else:
+        print("\nNo successful predictions to display.")
 
     if failed_predictors:
-        print("\n--- Prédicteurs Échoués ---")
-        for failed in failed_predictors:
-            print(f"  - {failed['name']}: {failed['reason']}")
-            if 'details' in failed and failed['details']:
-                 print(f"    Détails: {failed['details'][:200]}{'...' if len(failed['details']) > 200 else ''}")
+        print("\n--- ❌ Failed Predictor Reports ---")
+        for failed_data in failed_predictors:
+            print("------------------------------------------")
+            name = failed_data.get('name', 'N/A')
+            reason = failed_data.get('reason', 'N/A')
+            details = failed_data.get('details', '')
 
-
+            print(f"  Failed Predictor: {name}")
+            print(f"  Reason:           {reason}")
+            if details:
+                # Indent details for readability
+                indented_details = "    " + details.replace('\n', '\n    ')
+                print(f"  Details:\n{indented_details[:200 + (len(indented_details) - len(details))]}{'...' if len(details) > 200 else ''}") # Adjust truncation length due to added indentation
+            else:
+                print("  Details:          N/A")
+        print("------------------------------------------") # Final separator
+    else:
+        if successful_predictions: # Only print this if there were some successful ones
+            print("\nAll other predictors ran successfully or produced valid data.")
     # The original function returned a single combined prediction.
     # This new version prints a report. We need to decide what it should return for the CLI.
     # For now, let's make it return a summary or a status.
@@ -424,8 +452,10 @@ def main():
         print("🤝 Running consensus prediction mode...")
         try:
             # Pass the list of model names from args.models
+            # prediction_result is kept in case it's used for non-display purposes later
             prediction_result = run_consensus_by_frequency_prediction(selected_model_names=args.models)
-            display_prediction(prediction_result) # Use the existing display function
+            # The display_prediction(prediction_result) call is removed.
+            # All necessary output is now handled within run_consensus_by_frequency_prediction.
         except Exception as e:
             print(f"An error occurred during consensus prediction: {e}")
             # import traceback # For debugging
