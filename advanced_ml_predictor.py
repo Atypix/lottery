@@ -13,12 +13,16 @@ Date: Juin 2025
 import pandas as pd
 import numpy as np
 import json
+import pandas as pd
+import numpy as np
+# json is already imported
 import os
-from datetime import datetime, date as datetime_date # For date parsing
+from datetime import datetime, date as datetime_date
 import warnings
-import argparse # Added
-import json # Added
-from common.date_utils import get_next_euromillions_draw_date # Added
+import argparse
+# json is already imported via the second import json
+from common.date_utils import get_next_euromillions_draw_date
+import sys # Added for sys.stderr
 
 warnings.filterwarnings('ignore')
 
@@ -48,14 +52,20 @@ class AdvancedMLPredictor:
     """
     
     def __init__(self):
-        print("🤖 MODÈLES ML AVANCÉS - APPROCHE SCIENTIFIQUE 🤖")
-        print("=" * 70)
-        print("Implémentation basée sur l'analyse statistique rigoureuse")
-        print("Validation croisée et optimisation hyperparamètres")
-        print("=" * 70)
+        self.df = None # Added initialization
+        # print("🤖 MODÈLES ML AVANCÉS - APPROCHE SCIENTIFIQUE 🤖") # Suppressed for CLI
+        # print("=" * 70) # Suppressed
+        # print("Implémentation basée sur l'analyse statistique rigoureuse") # Suppressed
+        # print("Validation croisée et optimisation hyperparamètres") # Suppressed
+        # print("=" * 70) # Suppressed
         
         self.setup_ml_environment()
         self.load_scientific_results()
+
+        if self.df is None or self.df.empty:
+            # print("Erreur critique: DataFrame self.df non chargé ou vide dans AdvancedMLPredictor. Arrêt.", file=sys.stderr) # Optional print
+            raise ValueError("DataFrame df n'a pas été chargé correctement ou est vide dans AdvancedMLPredictor après load_scientific_results.")
+
         self.prepare_features()
         self.initialize_models()
         
@@ -106,7 +116,8 @@ class AdvancedMLPredictor:
             print("✅ Résultats statistiques intégrés")
             
         except Exception as e:
-            print(f"❌ Erreur de chargement: {e}")
+            print(f"❌ Erreur de chargement: {e}", file=sys.stderr) # Print errors to stderr
+            self.df = None # Ensure df is None if loading fails
             
     def prepare_features(self):
         """Prépare les caractéristiques basées sur l'analyse scientifique."""

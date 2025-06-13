@@ -14,6 +14,30 @@ from revolutionary_predictor import RevolutionaryPredictor # Renamed import
 from aggregated_final_predictor import AggregatedFinalPredictor
 from euromillions_model import predict_with_tensorflow_model, train_all_models_and_predict # Updated import
 
+import subprocess # Added
+import json # Added
+# sys, os, Counter, random, get_next_euromillions_draw_date are already imported
+
+PREDICTOR_CONFIGS = [
+    # Scientifique
+    {'name': 'advanced_ml_predictor', 'path': 'advanced_ml_predictor.py', 'category': 'Scientifique'},
+    {'name': 'optimized_scientific_predictor', 'path': 'optimized_scientific_predictor.py', 'category': 'Scientifique'},
+    {'name': 'predicteur_final_valide', 'path': 'predicteur_final_valide.py', 'category': 'Scientifique'},
+    {'name': 'euromillions_predictor', 'path': 'euromillions_predictor.py', 'category': 'Scientifique'},
+    {'name': 'predict_euromillions', 'path': 'predict_euromillions.py', 'category': 'Scientifique'},
+    {'name': 'quick_optimized_prediction', 'path': 'quick_optimized_prediction.py', 'category': 'Scientifique'},
+    # Révolutionnaire
+    {'name': 'adaptive_singularity', 'path': 'adaptive_singularity.py', 'category': 'Revolutionnaire'},
+    {'name': 'chaos_fractal_predictor', 'path': 'chaos_fractal_predictor.py', 'category': 'Revolutionnaire'},
+    {'name': 'conscious_ai_predictor', 'path': 'conscious_ai_predictor.py', 'category': 'Revolutionnaire'},
+    {'name': 'futuristic_phase1_optimized', 'path': 'futuristic_phase1_optimized.py', 'category': 'Revolutionnaire'},
+    {'name': 'multiverse_predictor', 'path': 'multiverse_predictor.py', 'category': 'Revolutionnaire'},
+    # Méta-Prédicteurs
+    {'name': 'aggregated_final_predictor', 'path': 'aggregated_final_predictor.py', 'category': 'Meta-Predicteurs'},
+    {'name': 'singularity_predictor', 'path': 'singularity_predictor.py', 'category': 'Meta-Predicteurs'},
+    {'name': 'meta_revolutionary_predictor', 'path': 'meta_revolutionary_predictor.py', 'category': 'Meta-Predicteurs'},
+]
+
 # --- Model Invocation Functions ---
 def run_final_valide():
     predictor = FinalValidatedPredictor()
