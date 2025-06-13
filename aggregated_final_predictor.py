@@ -147,6 +147,7 @@ class AggregatedFinalPredictor:
                 self.historical_data = pd.read_csv(actual_data_path)
                 # print(f"✅ {len(self.historical_data)} tirages historiques chargés") # Suppressed
             except Exception as e:
+                pass
                 # print(f"⚠️ Erreur chargement données depuis {actual_data_path}: {e}", file=sys.stderr) # To stderr
                 self.generate_fallback_data()
         else:
