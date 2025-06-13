@@ -1,6 +1,8 @@
 import pandas as pd
 from datetime import datetime, timedelta, date
 import os # Added
+
+def get_next_euromillions_draw_date(data_file_path: str = "euromillions_enhanced_dataset.csv") -> date:
     """
     Calculates the next Euromillions draw date.
     Euromillions draws are on Tuesdays and Fridays.
@@ -16,53 +18,71 @@ import os # Added
         The next Euromillions draw date as a datetime.date object.
     """
     latest_date_from_file = None
-    original_path_arg = data_file_path # Keep original for messages
+    # original_path_arg = data_file_path # This line causes an error as data_file_path is defined by the function signature
 
     # Determine paths to try
     path_in_data_subdir = None
     # Check if data_file_path is a simple filename (no directory part)
-    if os.path.basename(data_file_path) == data_file_path:
+    if os.path.basename(data_file_path) == data_file_path: # Now data_file_path is from function arg
         path_in_data_subdir = os.path.join("data", data_file_path)
 
     paths_to_try = []
     if path_in_data_subdir:
         paths_to_try.append(path_in_data_subdir)
-    paths_to_try.append(data_file_path) # Original path (could be absolute or relative)
+    paths_to_try.append(data_file_path) # Original path from function arg
 
     df_loaded = False
     for path_attempt in paths_to_try:
         try:
             df = pd.read_csv(path_attempt)
             if 'Date' not in df.columns or df.empty:
-                print(f"Warning: 'Date' column not found or DataFrame empty in {path_attempt}. Trying next path or defaulting.")
-                # Don't set latest_date_from_file here, let loop continue or fall to final default
+                # print(f"Warning: 'Date' column not found or DataFrame empty in {path_attempt}. Trying next path or defaulting.", file=sys.stderr) # To stderr
+                pass # Don't set latest_date_from_file here, let loop continue or fall to final default
             else:
                 df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
                 df.dropna(subset=['Date'], inplace=True)
                 if df.empty:
-                    print(f"Warning: No valid dates in 'Date' column in {path_attempt} after parsing. Trying next path or defaulting.")
+                    # print(f"Warning: No valid dates in 'Date' column in {path_attempt} after parsing. Trying next path or defaulting.", file=sys.stderr) # To stderr
+                    pass
                 else:
                     latest_date_from_file = df['Date'].max().date()
-                    print(f"Info: Successfully loaded and parsed dates from {path_attempt}")
+                    # print(f"Info: Successfully loaded and parsed dates from {path_attempt}", file=sys.stderr) # To stderr
                     df_loaded = True
                     break # Exit loop on successful load and parse
         except FileNotFoundError:
-            print(f"Info: Data file {path_attempt} not found. Trying next path or defaulting.")
+            # print(f"Info: Data file {path_attempt} not found. Trying next path or defaulting.", file=sys.stderr) # To stderr
+            pass
         except Exception as e:
-            print(f"Error reading or parsing {path_attempt}: {e}. Trying next path or defaulting.")
-            # Potentially set self.df to None or handle more explicitly if this class had state
+            # print(f"Error reading or parsing {path_attempt}: {e}. Trying next path or defaulting.", file=sys.stderr) # To stderr
+            pass # Potentially set self.df to None or handle more explicitly if this class had state
 
     if not df_loaded:
-        print(f"Warning: Could not load data from any attempted path ({', '.join(paths_to_try)}). Defaulting to current date for latest_date_from_file determination.")
+        # print(f"Warning: Could not load data from any attempted path ({', '.join(paths_to_try)}). Defaulting to current date for latest_date_from_file determination.", file=sys.stderr) # To stderr
+        latest_date_from_file = datetime.now().date() # Default to current date if no file loaded
+
+    # If latest_date_from_file is still None (e.g. all files empty/invalid), default to today
+    if latest_date_from_file is None:
         latest_date_from_file = datetime.now().date()
 
-    current_search_date = datetime.now().date()
+    current_search_date = latest_date_from_file # Start searching from the day after the latest known draw
+
+    # Ensure we start searching from a state that allows finding the *next* draw
+    # If latest_date_from_file is a draw day, we need to ensure we find the *next* one,
+    # not potentially itself if current_search_date isn't advanced.
+    # The loop structure `current_search_date += timedelta(days=1)` at the end handles moving forward.
+    # However, the first check needs to be robust.
+    # The logic should find the first Tuesday/Friday *strictly after* latest_date_from_file.
+    # So, current_search_date should effectively start its check from latest_date_from_file + 1 day.
+
+    # Start searching from the day *after* the latest known date.
+    current_search_date = latest_date_from_file + timedelta(days=1)
 
     while True:
         weekday = current_search_date.weekday()  # Monday is 0, Tuesday is 1, ..., Friday is 4, ...
+        # We are looking for the first Tuesday or Friday that is *after* latest_date_from_file.
+        # Since current_search_date starts at latest_date_from_file + 1, any draw day found is valid.
         if weekday == 1 or weekday == 4: # Tuesday or Friday
-            if current_search_date > latest_date_from_file:
-                return current_search_date
+            return current_search_date
         current_search_date += timedelta(days=1)
 
 if __name__ == '__main__':
