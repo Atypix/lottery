@@ -203,15 +203,27 @@ class EuromillionsPredictor:
         # Tri des numéros
         selected_main.sort()
         selected_stars.sort()
+
+        # Determine target_date_str for this prediction
+        current_target_date_str = None
+        if target_date_override_str:
+            current_target_date_str = target_date_override_str
+        elif actual_data_file_to_use: # Ensure we have a file to base the date on
+            next_draw_date_obj = get_next_euromillions_draw_date(actual_data_file_to_use)
+            if next_draw_date_obj:
+                current_target_date_str = next_draw_date_obj.strftime('%Y-%m-%d')
         
         # Création de la prédiction
         prediction = {
             "main_numbers": selected_main,
             "stars": selected_stars,
             "confidence": 0.5,
-            "method": "Analyse statistique",
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            "method": "Analyse statistique", # Internal use, not for final JSON
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S") # Internal use
         }
+
+        if current_target_date_str:
+            prediction["date_tirage_cible"] = current_target_date_str
         
         return prediction
     
@@ -395,10 +407,13 @@ class EuromillionsPredictor:
                     "nom_predicteur": "euromillions_predictor",
                     "numeros": prediction_data.get('main_numbers'),
                     "etoiles": prediction_data.get('stars'),
-                    "date_tirage_cible": prediction_data.get('date_tirage_cible'),
+                    # "date_tirage_cible": prediction_data.get('date_tirage_cible'), # Modified below
                     "confidence": prediction_data.get('confidence', 5.0), # Default confidence
                     "categorie": "Scientifique"
                 }
+                target_date_from_pred = prediction_data.get('date_tirage_cible')
+                if target_date_from_pred:
+                    output_dict["date_tirage_cible"] = target_date_from_pred
                 print(json.dumps(output_dict))
                 # self.display_prediction(prediction_data) # Suppressed for JSON output
                 # self.save_prediction(prediction_data) # Suppressed for JSON output
