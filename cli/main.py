@@ -208,7 +208,7 @@ def run_consensus_by_frequency_prediction(selected_model_names: list = None): # 
             command.extend(['--date', target_date_str])
 
         try:
-            process = subprocess.run(command, capture_output=True, text=True, timeout=60, check=False)
+            process = subprocess.run(command, capture_output=True, text=True, timeout=300, check=False)
 
             if process.returncode != 0:
                 error_message = f"Le script {script_name} a terminé avec le code {process.returncode}."
@@ -234,7 +234,7 @@ def run_consensus_by_frequency_prediction(selected_model_names: list = None): # 
                 failed_predictors.append({'name': script_name, 'reason': 'Sortie JSON invalide.'})
 
         except subprocess.TimeoutExpired:
-            print(f"Erreur: Le script {script_name} a dépassé le délai de 60 secondes.", file=sys.stderr)
+            print(f"Erreur: Le script {script_name} a dépassé le délai de 300 secondes.", file=sys.stderr)
             failed_predictors.append({'name': script_name, 'reason': 'Timeout'})
         except FileNotFoundError:
             print(f"Erreur: Script {script_path} non trouvé.", file=sys.stderr)
