@@ -40,32 +40,32 @@ class FinalValidatedPredictor:
 
         # print(f"🔮 Prédiction pour le tirage du: {self.actual_next_draw_date.strftime('%d/%m/%Y')} (dynamically determined)")
         # print("Méthodologie: Optimisation ciblée scientifiquement validée")
-        print("Performance: 100% de correspondances (7/7) avec tirage réel")
-        print("Validation: Scientifique rigoureuse (Probabilité: 1/139,838,160)")
-        print("=" * 65)
+        # print("Performance: 100% de correspondances (7/7) avec tirage réel") # Suppressed
+        # print("Validation: Scientifique rigoureuse (Probabilité: 1/139,838,160)") # Suppressed
+        # print("=" * 65) # Suppressed
         
         self.load_data()
         self.setup_validated_model()
         
     def load_data(self):
         """Charge les données historiques."""
-        print("📊 Chargement des données validées...")
+        # print("📊 Chargement des données validées...") # Suppressed
         data_path_primary = 'data/euromillions_enhanced_dataset.csv'
         data_path_fallback = 'euromillions_enhanced_dataset.csv'
         if os.path.exists(data_path_primary):
             self.df = pd.read_csv(data_path_primary)
-            print(f"✅ Données chargées depuis {data_path_primary}: {len(self.df)} tirages historiques chargés")
+            # print(f"✅ Données chargées depuis {data_path_primary}: {len(self.df)} tirages historiques chargés") # Suppressed
         elif os.path.exists(data_path_fallback):
             self.df = pd.read_csv(data_path_fallback)
-            print(f"✅ Données chargées depuis {data_path_fallback} (répertoire courant): {len(self.df)} tirages historiques chargés")
+            # print(f"✅ Données chargées depuis {data_path_fallback} (répertoire courant): {len(self.df)} tirages historiques chargés") # Suppressed
         else:
-            print(f"❌ ERREUR: Fichier de données non trouvé ({data_path_primary} ou {data_path_fallback})")
+            # print(f"❌ ERREUR: Fichier de données non trouvé ({data_path_primary} ou {data_path_fallback})") # Suppressed
             self.df = pd.DataFrame() # Or sys.exit(1)
             # For now, let it proceed and potentially fail later if df is critical
         
     def setup_validated_model(self):
         """Configure le modèle validé scientifiquement."""
-        print("🔧 Configuration du modèle validé...")
+        # print("🔧 Configuration du modèle validé...") # Suppressed
         
         # Modèle Bayesian Ridge (meilleure performance validée)
         self.model = BayesianRidge(
@@ -76,7 +76,7 @@ class FinalValidatedPredictor:
         )
         
         self.scaler = StandardScaler()
-        print("✅ Modèle Bayesian Ridge configuré (validé scientifiquement)")
+        # print("✅ Modèle Bayesian Ridge configuré (validé scientifiquement)") # Suppressed
         
     def extract_validated_features(self, index, window_size=8):
         """Extrait les features validées scientifiquement."""
@@ -126,7 +126,7 @@ class FinalValidatedPredictor:
         
     def train_validated_model(self):
         """Entraîne le modèle avec la méthodologie validée."""
-        print("🏋️ Entraînement du modèle validé...")
+        # print("🏋️ Entraînement du modèle validé...") # Suppressed
         
         # Création des features et targets
         features_data = []
@@ -151,11 +151,11 @@ class FinalValidatedPredictor:
         X_scaled = self.scaler.fit_transform(X)
         self.model.fit(X_scaled, y)
         
-        print(f"✅ Modèle entraîné sur {len(X)} échantillons")
+        # print(f"✅ Modèle entraîné sur {len(X)} échantillons") # Suppressed
         
     def generate_validated_prediction(self):
         """Génère une prédiction avec la méthodologie validée."""
-        print("🎯 Génération de la prédiction validée...")
+        # print("🎯 Génération de la prédiction validée...") # Suppressed
         
         # Features pour la prédiction
         last_index = len(self.df) - 1
@@ -247,7 +247,7 @@ class FinalValidatedPredictor:
         
     def save_prediction(self, prediction):
         """Sauvegarde la prédiction finale."""
-        print("💾 Sauvegarde de la prédiction finale...")
+        # print("💾 Sauvegarde de la prédiction finale...") # Suppressed
         
         date_str_for_filename = datetime.strptime(prediction['target_draw_date'], '%Y-%m-%d').strftime('%Y-%m-%d')
         json_filename = f"prediction_final_valide_{date_str_for_filename}.json"
@@ -313,23 +313,23 @@ class FinalValidatedPredictor:
         with open(ticket_filename, 'w') as f:
             f.write(ticket)
         
-        print(f"✅ Prédiction finale sauvegardée ({json_filename}, {ticket_filename})")
+        # print(f"✅ Prédiction finale sauvegardée ({json_filename}, {ticket_filename})") # Suppressed
         
     def run_final_prediction(self):
         """Exécute la prédiction finale complète."""
-        print("🚀 GÉNÉRATION DE LA PRÉDICTION FINALE VALIDÉE 🚀")
-        print("=" * 60)
+        # print("🚀 GÉNÉRATION DE LA PRÉDICTION FINALE VALIDÉE 🚀") # Suppressed
+        # print("=" * 60) # Suppressed
         
         # 1. Entraînement du modèle validé
-        print("🏋️ Phase 1: Entraînement du modèle validé...")
+        # print("🏋️ Phase 1: Entraînement du modèle validé...") # Suppressed
         self.train_validated_model()
         
         # 2. Génération de la prédiction
-        print("🎯 Phase 2: Génération de la prédiction...")
+        # print("🎯 Phase 2: Génération de la prédiction...") # Suppressed
         prediction = self.generate_validated_prediction()
         
         # 3. Sauvegarde
-        print("💾 Phase 3: Sauvegarde...")
+        # print("💾 Phase 3: Sauvegarde...") # Suppressed
         self.save_prediction(prediction)
         
         # Add model_name to the prediction dict

@@ -74,7 +74,7 @@ class QuantumProbabilityEngine:
         self.entanglement_matrix = {}
         self.superposition_coefficients = {}
         
-        print("⚛️ Moteur de Probabilités Quantiques initialisé")
+        # print("⚛️ Moteur de Probabilités Quantiques initialisé") # Suppressed
     
     def create_quantum_superposition(self, universe_id: str, possibilities: List[Any]) -> Dict[str, complex]:
         """
@@ -168,7 +168,7 @@ class UniverseSimulator:
         self.chaos_factor = dimension_params.get('chaos_factor', 0.1)
         self.emergence_threshold = dimension_params.get('emergence_threshold', 0.7)
         
-        print(f"🌌 Univers {universe_id} simulé avec paramètres: {dimension_params}")
+        # print(f"🌌 Univers {universe_id} simulé avec paramètres: {dimension_params}") # Suppressed
     
     def simulate_timeline(self, base_data: pd.DataFrame, timeline_length: int = 100) -> List[Dict[str, Any]]:
         """
@@ -395,27 +395,27 @@ class MultiversePredictor:
         """
         Initialise le prédicteur multivers.
         """
-        print("🌌 SYSTÈME DE MULTIVERS PARALLÈLES 🌌")
-        print("=" * 60)
-        print("Capacités révolutionnaires :")
-        print("• Simulation d'Univers Parallèles")
-        print("• Exploration Multi-Dimensionnelle")
-        print("• Consensus Inter-Univers")
-        print("• Probabilités Quantiques")
-        print("• Émergence Trans-Dimensionnelle")
-        print("=" * 60)
+        # print("🌌 SYSTÈME DE MULTIVERS PARALLÈLES 🌌") # Suppressed
+        # print("=" * 60) # Suppressed
+        # print("Capacités révolutionnaires :") # Suppressed
+        # print("• Simulation d'Univers Parallèles") # Suppressed
+        # print("• Exploration Multi-Dimensionnelle") # Suppressed
+        # print("• Consensus Inter-Univers") # Suppressed
+        # print("• Probabilités Quantiques") # Suppressed
+        # print("• Émergence Trans-Dimensionnelle") # Suppressed
+        # print("=" * 60) # Suppressed
         
         # Chargement des données
         data_path_primary = data_path
         data_path_fallback = "euromillions_enhanced_dataset.csv"
         if os.path.exists(data_path_primary):
             self.df = pd.read_csv(data_path_primary)
-            print(f"✅ Données chargées depuis {data_path_primary}: {len(self.df)} tirages")
+            # print(f"✅ Données chargées depuis {data_path_primary}: {len(self.df)} tirages") # Suppressed
         elif os.path.exists(data_path_fallback):
             self.df = pd.read_csv(data_path_fallback)
-            print(f"✅ Données chargées depuis {data_path_fallback} (répertoire courant): {len(self.df)} tirages")
+            # print(f"✅ Données chargées depuis {data_path_fallback} (répertoire courant): {len(self.df)} tirages") # Suppressed
         else:
-            print(f"❌ Fichier principal non trouvé ({data_path_primary} ou {data_path_fallback}). Utilisation de données de base...")
+            # print(f"❌ Fichier principal non trouvé ({data_path_primary} ou {data_path_fallback}). Utilisation de données de base...") # Suppressed
             self.load_basic_data()
         
         # Univers parallèles
@@ -445,12 +445,12 @@ class MultiversePredictor:
         data_path_fallback_basic = "euromillions_dataset.csv"
         if os.path.exists(data_path_primary_basic):
             self.df = pd.read_csv(data_path_primary_basic)
-            print(f"✅ Données de base chargées depuis {data_path_primary_basic}")
+            # print(f"✅ Données de base chargées depuis {data_path_primary_basic}") # Suppressed
         elif os.path.exists(data_path_fallback_basic):
             self.df = pd.read_csv(data_path_fallback_basic)
-            print(f"✅ Données de base chargées depuis {data_path_fallback_basic} (répertoire courant)")
+            # print(f"✅ Données de base chargées depuis {data_path_fallback_basic} (répertoire courant)") # Suppressed
         else:
-            print(f"❌ Fichier de données de base non trouvé ({data_path_primary_basic} ou {data_path_fallback_basic}). Création de données synthétiques...")
+            # print(f"❌ Fichier de données de base non trouvé ({data_path_primary_basic} ou {data_path_fallback_basic}). Création de données synthétiques...") # Suppressed
             # Création de données synthétiques
             dates = pd.date_range(start='2020-01-01', end='2025-06-01', freq='3D')
             data = []
@@ -472,7 +472,7 @@ class MultiversePredictor:
         """
         Génère des univers parallèles avec différents paramètres dimensionnels.
         """
-        print(f"🌌 Génération de {num_universes} univers parallèles...")
+        # print(f"🌌 Génération de {num_universes} univers parallèles...") # Suppressed
         
         universe_types = [
             {'name': 'quantum_prime', 'temporal_flow': 1.2, 'probability_bias': 0.3, 'causal_strength': 0.8, 'chaos_factor': 0.1, 'emergence_threshold': 0.9},
@@ -519,7 +519,7 @@ class MultiversePredictor:
         # Mise à jour de l'état du multivers
         self.multiverse_state.total_universes = len(self.universes)
         
-        print(f"✅ {len(self.universes)} univers parallèles générés et simulés")
+        # print(f"✅ {len(self.universes)} univers parallèles générés et simulés") # Suppressed
     
     def create_quantum_entanglements(self):
         """
@@ -559,7 +559,7 @@ class MultiversePredictor:
         """
         Analyse les patterns qui transcendent les dimensions.
         """
-        print("🔍 Analyse des patterns trans-dimensionnels...")
+        # print("🔍 Analyse des patterns trans-dimensionnels...") # Suppressed
         
         trans_patterns = []
         
@@ -644,7 +644,7 @@ class MultiversePredictor:
         """
         Génère un consensus basé sur tous les univers parallèles.
         """
-        print("🌌 Génération du consensus multivers...")
+        # print("🌌 Génération du consensus multivers...") # Suppressed
         
         # Analyse des patterns trans-dimensionnels
         trans_patterns = self.analyze_trans_dimensional_patterns()
@@ -754,8 +754,8 @@ class MultiversePredictor:
         """
         Génère une prédiction basée sur le consensus du multivers.
         """
-        print("\n🌌 GÉNÉRATION DE PRÉDICTION MULTIVERS 🌌")
-        print("=" * 55)
+        # print("\n🌌 GÉNÉRATION DE PRÉDICTION MULTIVERS 🌌") # Suppressed
+        # print("=" * 55) # Suppressed
         
         # Génération du consensus
         consensus = self.generate_multiverse_consensus()
@@ -840,6 +840,7 @@ class MultiversePredictor:
         os.makedirs("results/multiverse", exist_ok=True)
         
         # Fonction de conversion pour JSON
+        # This function is for internal saving, not the main JSON output, so its prints are okay or should go to stderr.
         def convert_for_json(obj):
             if isinstance(obj, np.bool_):
                 return bool(obj)
@@ -888,7 +889,7 @@ class MultiversePredictor:
             f.write("et intrications quantiques entre réalités.\n\n")
             f.write("🍀 BONNE CHANCE AVEC CE CONSENSUS MULTIVERS! 🍀\n")
         
-        print("✅ Résultats du multivers sauvegardés dans results/multiverse/")
+        # print("✅ Résultats du multivers sauvegardés dans results/multiverse/") # Suppressed
 
 def main():
     """

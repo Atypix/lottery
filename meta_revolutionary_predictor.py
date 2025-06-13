@@ -21,12 +21,16 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from datetime import datetime
+from datetime import datetime, timedelta # Added timedelta
 import json
 import os
 from typing import List, Tuple, Dict, Any, Optional
 import subprocess
 import warnings
+import argparse # Added
+import sys # Added
+from common.date_utils import get_next_euromillions_draw_date # Added
+
 warnings.filterwarnings('ignore')
 
 class MetaRevolutionaryPredictor:
@@ -38,30 +42,41 @@ class MetaRevolutionaryPredictor:
         """
         Initialise le méta-système révolutionnaire ultime.
         """
-        print("🚀 MÉTA-SYSTÈME RÉVOLUTIONNAIRE ULTIME 🚀")
-        print("=" * 80)
-        print("Intégration de TOUTES les techniques révolutionnaires :")
-        print("• IA Quantique Simulée + Neurones Bio-Inspirés")
-        print("• Analyse Fractale + Théorie du Chaos")
-        print("• Intelligence Collective Multi-Essaims")
-        print("• Fusion Méta-Cognitive Révolutionnaire")
-        print("• Consensus Multi-Paradigmes")
-        print("• Auto-Adaptation Émergente")
-        print("=" * 80)
+        # print("🚀 MÉTA-SYSTÈME RÉVOLUTIONNAIRE ULTIME 🚀")
+        # print("=" * 80)
+        # print("Intégration de TOUTES les techniques révolutionnaires :")
+        # print("• IA Quantique Simulée + Neurones Bio-Inspirés")
+        # print("• Analyse Fractale + Théorie du Chaos")
+        # print("• Intelligence Collective Multi-Essaims")
+        # print("• Fusion Méta-Cognitive Révolutionnaire")
+        # print("• Consensus Multi-Paradigmes")
+        # print("• Auto-Adaptation Émergente")
+        # print("=" * 80)
         
         # Chargement des données
-        if os.path.exists(data_path):
-            self.df = pd.read_csv(data_path)
-            print(f"✅ Données chargées: {len(self.df)} tirages")
+        # Prioritize data/ subdirectory
+        data_path_priority = os.path.join("data", "euromillions_enhanced_dataset.csv")
+        data_path_fallback_root = "euromillions_enhanced_dataset.csv"
+        data_path_original_arg = data_path # Original argument, might be specific
+
+        if os.path.exists(data_path_priority):
+            self.df = pd.read_csv(data_path_priority)
+            # print(f"✅ Données chargées depuis {data_path_priority}: {len(self.df)} tirages", file=sys.stderr)
+        elif os.path.exists(data_path_fallback_root):
+            self.df = pd.read_csv(data_path_fallback_root)
+            # print(f"✅ Données chargées depuis {data_path_fallback_root}: {len(self.df)} tirages", file=sys.stderr)
+        elif os.path.exists(data_path_original_arg):
+            self.df = pd.read_csv(data_path_original_arg)
+            # print(f"✅ Données chargées depuis {data_path_original_arg} (argument): {len(self.df)} tirages", file=sys.stderr)
         else:
-            print("❌ Fichier non trouvé, utilisation de données de base...")
+            # print(f"❌ Fichiers de données non trouvés ({data_path_priority}, {data_path_fallback_root}, {data_path_original_arg}). Utilisation de données de base...", file=sys.stderr)
             self.load_basic_data()
         
         # Stockage des prédictions révolutionnaires
         self.revolutionary_predictions = {}
         self.meta_analysis = {}
         
-        print("✅ Méta-Système Révolutionnaire Ultime initialisé!")
+        # print("✅ Méta-Système Révolutionnaire Ultime initialisé!", file=sys.stderr)
     
     def load_basic_data(self):
         """
@@ -91,87 +106,104 @@ class MetaRevolutionaryPredictor:
         """
         Exécute le système quantique-biologique.
         """
-        print("🔬 Exécution du système Quantique-Biologique...")
+        # print(f"🔬 Exécution du système Quantique-Biologique...", file=sys.stderr)
         
+        # Define script path relative to the project structure if possible
+        # For now, keeping the original path but noting it's problematic
+        script_path = "quantum_bio_predictor.py" # Placeholder, original was /home/ubuntu/...
+        results_path = "results/revolutionary/quantum_bio_prediction.json"
+
         try:
             # Exécution du script quantique-biologique
+            # This subprocess call is problematic for clean JSON output if the script itself prints
             result = subprocess.run(
-                ["python3", "/home/ubuntu/quantum_bio_predictor.py"],
+                ["python3", script_path], # Changed to relative path
                 capture_output=True,
                 text=True,
-                timeout=300
+                timeout=300,
+                check=False # Avoid raising CalledProcessError for non-zero exit codes
             )
-            
+            if result.returncode != 0:
+                # print(f"⚠️ Script {script_path} a échoué avec code {result.returncode}: {result.stderr}", file=sys.stderr)
+                pass # Fall through to fallback
+
             # Lecture des résultats
-            if os.path.exists("results/revolutionary/quantum_bio_prediction.json"):
-                with open("results/revolutionary/quantum_bio_prediction.json", 'r') as f:
+            if os.path.exists(results_path):
+                with open(results_path, 'r') as f:
                     prediction = json.load(f)
-                print("✅ Prédiction Quantique-Biologique récupérée")
+                # print(f"✅ Prédiction Quantique-Biologique récupérée depuis {results_path}", file=sys.stderr)
                 return prediction
             else:
-                print("⚠️ Fichier de résultats quantique-biologique non trouvé")
+                # print(f"⚠️ Fichier de résultats {results_path} non trouvé", file=sys.stderr)
                 return self.create_fallback_prediction("Quantique-Biologique")
         
         except Exception as e:
-            print(f"⚠️ Erreur lors de l'exécution quantique-biologique: {e}")
+            # print(f"⚠️ Erreur lors de l'exécution quantique-biologique ({script_path}): {e}", file=sys.stderr)
             return self.create_fallback_prediction("Quantique-Biologique")
     
     def execute_chaos_fractal_prediction(self) -> Dict[str, Any]:
         """
         Exécute le système chaos-fractal.
         """
-        print("🌀 Exécution du système Chaos-Fractal...")
-        
+        # print(f"🌀 Exécution du système Chaos-Fractal...", file=sys.stderr)
+        script_path = "chaos_fractal_predictor.py" # Placeholder
+        results_path = "results/chaos_fractal/chaos_fractal_prediction.json"
+
         try:
-            # Exécution du script chaos-fractal
             result = subprocess.run(
-                ["python3", "/home/ubuntu/chaos_fractal_predictor.py"],
+                ["python3", script_path], # Changed
                 capture_output=True,
                 text=True,
-                timeout=300
+                timeout=300,
+                check=False
             )
-            
-            # Lecture des résultats
-            if os.path.exists("results/chaos_fractal/chaos_fractal_prediction.json"):
-                with open("results/chaos_fractal/chaos_fractal_prediction.json", 'r') as f:
+            if result.returncode != 0:
+                # print(f"⚠️ Script {script_path} a échoué: {result.stderr}", file=sys.stderr)
+                pass
+
+            if os.path.exists(results_path):
+                with open(results_path, 'r') as f:
                     prediction = json.load(f)
-                print("✅ Prédiction Chaos-Fractal récupérée")
+                # print(f"✅ Prédiction Chaos-Fractal récupérée depuis {results_path}", file=sys.stderr)
                 return prediction
             else:
-                print("⚠️ Fichier de résultats chaos-fractal non trouvé")
+                # print(f"⚠️ Fichier de résultats {results_path} non trouvé", file=sys.stderr)
                 return self.create_fallback_prediction("Chaos-Fractal")
         
         except Exception as e:
-            print(f"⚠️ Erreur lors de l'exécution chaos-fractal: {e}")
+            # print(f"⚠️ Erreur lors de l'exécution chaos-fractal ({script_path}): {e}", file=sys.stderr)
             return self.create_fallback_prediction("Chaos-Fractal")
     
     def execute_swarm_intelligence_prediction(self) -> Dict[str, Any]:
         """
         Exécute le système d'intelligence collective.
         """
-        print("🌟 Exécution du système d'Intelligence Collective...")
-        
+        # print(f"🌟 Exécution du système d'Intelligence Collective...", file=sys.stderr)
+        script_path = "swarm_intelligence_predictor.py" # Placeholder
+        results_path = "results/swarm_intelligence/swarm_prediction.json"
         try:
-            # Exécution du script d'intelligence collective
             result = subprocess.run(
-                ["python3", "/home/ubuntu/swarm_intelligence_predictor.py"],
+                ["python3", script_path], # Changed
                 capture_output=True,
                 text=True,
-                timeout=300
+                timeout=300,
+                check=False
             )
-            
-            # Lecture des résultats
-            if os.path.exists("results/swarm_intelligence/swarm_prediction.json"):
-                with open("results/swarm_intelligence/swarm_prediction.json", 'r') as f:
+            if result.returncode != 0:
+                # print(f"⚠️ Script {script_path} a échoué: {result.stderr}", file=sys.stderr)
+                pass
+
+            if os.path.exists(results_path):
+                with open(results_path, 'r') as f:
                     prediction = json.load(f)
-                print("✅ Prédiction Intelligence Collective récupérée")
+                # print(f"✅ Prédiction Intelligence Collective récupérée depuis {results_path}", file=sys.stderr)
                 return prediction
             else:
-                print("⚠️ Fichier de résultats intelligence collective non trouvé")
+                # print(f"⚠️ Fichier de résultats {results_path} non trouvé", file=sys.stderr)
                 return self.create_fallback_prediction("Intelligence Collective")
         
         except Exception as e:
-            print(f"⚠️ Erreur lors de l'exécution intelligence collective: {e}")
+            # print(f"⚠️ Erreur lors de l'exécution intelligence collective ({script_path}): {e}", file=sys.stderr)
             return self.create_fallback_prediction("Intelligence Collective")
     
     def create_fallback_prediction(self, method_name: str) -> Dict[str, Any]:
@@ -227,7 +259,7 @@ class MetaRevolutionaryPredictor:
         """
         Fusion méta-cognitive de toutes les prédictions révolutionnaires.
         """
-        print("🧠 Fusion Méta-Cognitive Révolutionnaire...")
+        # print(f"🧠 Fusion Méta-Cognitive Révolutionnaire...", file=sys.stderr)
         
         # Extraction des prédictions
         all_main_numbers = []
@@ -435,7 +467,7 @@ class MetaRevolutionaryPredictor:
         """
         Crée des visualisations du méta-système.
         """
-        print("📊 Création des visualisations méta-cognitives...")
+        # print(f"📊 Création des visualisations méta-cognitives...", file=sys.stderr)
         
         os.makedirs("results/meta_revolutionary/visualizations", exist_ok=True)
         
@@ -463,18 +495,23 @@ class MetaRevolutionaryPredictor:
         
         # 2. Analyse de convergence
         ax2 = axes[0, 1]
-        convergence_data = meta_prediction["convergence_analysis"]
+        convergence_data = meta_prediction.get("convergence_analysis", {}) # Added .get for safety
         
-        if "pairwise_intersections" in convergence_data:
+        if "pairwise_intersections" in convergence_data and convergence_data["pairwise_intersections"]: # Check if not empty
             pairs = list(convergence_data["pairwise_intersections"].keys())
             similarities = [data["total_similarity"] for data in convergence_data["pairwise_intersections"].values()]
             
-            bars = ax2.bar(range(len(pairs)), similarities, color='orange')
-            ax2.set_title('Convergence entre Méthodes', fontweight='bold', color='white')
-            ax2.set_ylabel('Similarité', color='white')
-            ax2.set_xticks(range(len(pairs)))
-            ax2.set_xticklabels([pair.replace('_vs_', ' vs ') for pair in pairs], rotation=45, color='white')
-            ax2.tick_params(axis='y', colors='white')
+            if pairs and similarities: # Ensure not empty before plotting
+                bars = ax2.bar(range(len(pairs)), similarities, color='orange')
+                ax2.set_title('Convergence entre Méthodes', fontweight='bold', color='white')
+                ax2.set_ylabel('Similarité', color='white')
+                ax2.set_xticks(range(len(pairs)))
+                ax2.set_xticklabels([pair.replace('_vs_', ' vs ') for pair in pairs], rotation=45, color='white')
+                ax2.tick_params(axis='y', colors='white')
+            else:
+                ax2.text(0.5, 0.5, "Données de convergence\nnon disponibles ou vides", ha='center', va='center', color='gray', fontsize=10)
+        else:
+            ax2.text(0.5, 0.5, "Analyse de convergence\nnon disponible", ha='center', va='center', color='gray', fontsize=10)
         
         # 3. Distribution des numéros prédits
         ax3 = axes[1, 0]
@@ -526,14 +563,14 @@ class MetaRevolutionaryPredictor:
                    dpi=300, bbox_inches='tight', facecolor='black')
         plt.close()
         
-        print("✅ Visualisations méta-cognitives créées")
+        # print(f"✅ Visualisations méta-cognitives créées", file=sys.stderr)
     
     def generate_meta_revolutionary_prediction(self) -> Dict[str, Any]:
         """
         Génère la prédiction méta-révolutionnaire ultime.
         """
-        print("\n🎯 GÉNÉRATION DE PRÉDICTION MÉTA-RÉVOLUTIONNAIRE ULTIME 🎯")
-        print("=" * 75)
+        # print(f"\n🎯 GÉNÉRATION DE PRÉDICTION MÉTA-RÉVOLUTIONNAIRE ULTIME 🎯", file=sys.stderr)
+        # print("=" * 75, file=sys.stderr)
         
         # Exécution de tous les systèmes révolutionnaires
         predictions = {}
@@ -614,45 +651,73 @@ class MetaRevolutionaryPredictor:
             f.write("de prédiction Euromillions le plus avancé au monde.\n\n")
             f.write("🍀 BONNE CHANCE AVEC CETTE INNOVATION RÉVOLUTIONNAIRE ULTIME! 🍀\n")
         
-        print("✅ Résultats méta-révolutionnaires sauvegardés dans results/meta_revolutionary/")
+        # print(f"✅ Résultats méta-révolutionnaires sauvegardés dans results/meta_revolutionary/", file=sys.stderr)
 
 def main():
     """
     Fonction principale pour exécuter le méta-système révolutionnaire ultime.
     """
-    print("🚀 MÉTA-SYSTÈME RÉVOLUTIONNAIRE ULTIME EUROMILLIONS 🚀")
-    print("=" * 85)
-    print("FUSION DE TOUTES LES TECHNIQUES RÉVOLUTIONNAIRES :")
-    print("• IA Quantique Simulée + Réseaux de Neurones Bio-Inspirés")
-    print("• Analyse Fractale + Théorie du Chaos")
-    print("• Intelligence Collective Multi-Essaims (PSO, ACO, ABC)")
-    print("• Fusion Méta-Cognitive Révolutionnaire")
-    print("• Consensus Multi-Paradigmes")
-    print("• Auto-Adaptation Émergente")
-    print("=" * 85)
+    parser = argparse.ArgumentParser(description="Méta-Système Révolutionnaire Ultime Euromillions.")
+    parser.add_argument("--date", type=str, help="Date cible du tirage (YYYY-MM-DD). Si non fournie, la prochaine date de tirage est auto-déterminée.")
+    # Default data_path can be overridden if needed, but __init__ now handles robust path finding
+    parser.add_argument("--data_path", type=str, default="euromillions_enhanced_dataset.csv", help="Chemin vers le fichier de données Euromillions.")
+    args = parser.parse_args()
+
+    # print("🚀 MÉTA-SYSTÈME RÉVOLUTIONNAIRE ULTIME EUROMILLIONS 🚀", file=sys.stderr)
+    # print("=" * 85, file=sys.stderr)
+    # print("FUSION DE TOUTES LES TECHNIQUES RÉVOLUTIONNAIRES :", file=sys.stderr)
+    # ... (other descriptive prints to stderr if needed)
+    # print("=" * 85, file=sys.stderr)
     
     # Initialisation du méta-système
-    meta_predictor = MetaRevolutionaryPredictor()
+    meta_predictor = MetaRevolutionaryPredictor(data_path=args.data_path)
     
     # Génération de la prédiction méta-révolutionnaire
-    meta_prediction = meta_predictor.generate_meta_revolutionary_prediction()
+    meta_prediction_results = meta_predictor.generate_meta_revolutionary_prediction() # Renamed to avoid confusion
     
-    # Affichage des résultats
-    print("\n🎉 PRÉDICTION MÉTA-RÉVOLUTIONNAIRE ULTIME GÉNÉRÉE! 🎉")
-    print("=" * 65)
-    print(f"CONSENSUS ULTIME:")
-    print(f"Numéros principaux: {', '.join(map(str, meta_prediction['main_numbers']))}")
-    print(f"Étoiles: {', '.join(map(str, meta_prediction['stars']))}")
-    print(f"Score de confiance ultime: {meta_prediction['confidence_score']:.2f}/10")
-    print(f"Méthodes fusionnées: {meta_prediction['meta_metrics']['total_methods']}")
-    print(f"Convergence: {meta_prediction['convergence_analysis']['convergence_level']}")
-    print(f"Innovation: {meta_prediction['innovation_level']}")
+    # Détermination de la date cible pour la sortie JSON
+    if args.date:
+        try:
+            target_date_obj = datetime.strptime(args.date, '%Y-%m-%d').date()
+        except ValueError:
+            # print(f"⚠️ Format de date invalide '{args.date}'. Utilisation de la date auto-déterminée.", file=sys.stderr)
+            target_date_obj = get_next_euromillions_draw_date(meta_predictor.df) # Use df from predictor
+            if not target_date_obj: # Fallback if get_next_euromillions_draw_date fails
+                today = datetime.now().date()
+                days_until_friday = (4 - today.weekday() + 7) % 7
+                if days_until_friday == 0 and datetime.now().time() > datetime.strptime("20:00", "%H:%M").time():
+                    days_until_friday = 7
+                target_date_obj = today + timedelta(days=days_until_friday)
+    else:
+        target_date_obj = get_next_euromillions_draw_date(meta_predictor.df) # Use df from predictor
+        if not target_date_obj: # Fallback
+            today = datetime.now().date()
+            days_until_friday = (4 - today.weekday() + 7) % 7
+            if days_until_friday == 0 and datetime.now().time() > datetime.strptime("20:00", "%H:%M").time():
+                 days_until_friday = 7
+            target_date_obj = today + timedelta(days=days_until_friday)
     
-    # Sauvegarde
-    meta_predictor.save_meta_results(meta_prediction)
+    output_target_date_str = target_date_obj.strftime('%Y-%m-%d')
+
+    # Préparation de la sortie JSON standardisée
+    output_dict = {
+        'nom_predicteur': 'meta_revolutionary_predictor',
+        'numeros': meta_prediction_results.get('main_numbers', []),
+        'etoiles': meta_prediction_results.get('stars', []),
+        'date_tirage_cible': output_target_date_str,
+        'confidence': meta_prediction_results.get('confidence_score', 7.5), # Scale 0-10
+        'categorie': "Meta-Predicteurs"
+    }
     
-    print("\n🚀 MÉTA-SYSTÈME RÉVOLUTIONNAIRE ULTIME TERMINÉ AVEC SUCCÈS! 🚀")
-    print("🌟 VOUS DISPOSEZ MAINTENANT DU SYSTÈME DE PRÉDICTION LE PLUS AVANCÉ AU MONDE! 🌟")
+    # Sauvegarde des résultats complets (déjà fait dans generate_meta_revolutionary_prediction via save_meta_results)
+    # meta_predictor.save_meta_results(meta_prediction_results)
+    # No, save_meta_results is called inside generate_meta_revolutionary_prediction, which is fine.
+
+    # La seule sortie vers stdout doit être le JSON
+    print(json.dumps(output_dict))
+
+    # print("\n🚀 MÉTA-SYSTÈME RÉVOLUTIONNAIRE ULTIME TERMINÉ AVEC SUCCÈS! 🚀", file=sys.stderr)
+    # print("🌟 VOUS DISPOSEZ MAINTENANT DU SYSTÈME DE PRÉDICTION LE PLUS AVANCÉ AU MONDE! 🌟", file=sys.stderr)
 
 if __name__ == "__main__":
     main()

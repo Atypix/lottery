@@ -27,6 +27,10 @@ from typing import List, Tuple, Dict, Any, Optional
 import random
 from dataclasses import dataclass
 import warnings
+import argparse # Added
+# json, datetime, pd, np etc. are already imported
+from common.date_utils import get_next_euromillions_draw_date, date as datetime_date # Added
+
 warnings.filterwarnings('ignore')
 
 @dataclass
@@ -913,26 +917,52 @@ def main():
     print("=" * 75)
     
     # Initialisation
-    predictor = SwarmIntelligencePredictor()
+    parser = argparse.ArgumentParser(description="Swarm Intelligence Predictor for Euromillions.")
+    parser.add_argument("--date", type=str, help="Target draw date in YYYY-MM-DD format.")
+    args = parser.parse_args()
+
+    target_date_str = None
+    data_file_for_date_calc = "data/euromillions_enhanced_dataset.csv"
+    if not os.path.exists(data_file_for_date_calc):
+        data_file_for_date_calc = "euromillions_enhanced_dataset.csv"
+        if not os.path.exists(data_file_for_date_calc):
+            data_file_for_date_calc = None
+
+    if args.date:
+        try:
+            datetime.strptime(args.date, '%Y-%m-%d') # Validate
+            target_date_str = args.date
+        except ValueError:
+            # print(f"Warning: Invalid date format for --date {args.date}. Using next logical date.", file=sys.stderr) # Suppressed
+            target_date_obj = get_next_euromillions_draw_date(data_file_for_date_calc)
+            target_date_str = target_date_obj.strftime('%Y-%m-%d') if target_date_obj else datetime.now().date().strftime('%Y-%m-%d')
+    else:
+        target_date_obj = get_next_euromillions_draw_date(data_file_for_date_calc)
+        target_date_str = target_date_obj.strftime('%Y-%m-%d') if target_date_obj else datetime.now().date().strftime('%Y-%m-%d')
+
+    predictor = SwarmIntelligencePredictor() # Uses internal data loading
     
     # Génération de la prédiction collective
-    prediction = predictor.generate_swarm_prediction()
-    
-    # Affichage des résultats
-    print("\n🎉 PRÉDICTION COLLECTIVE GÉNÉRÉE! 🎉")
-    print("=" * 50)
-    print(f"Consensus collectif:")
-    print(f"Numéros principaux: {', '.join(map(str, prediction['main_numbers']))}")
-    print(f"Étoiles: {', '.join(map(str, prediction['stars']))}")
-    print(f"Score de confiance: {prediction['confidence_score']:.2f}/10")
-    print(f"Diversité d'essaim: {prediction['collective_metrics']['swarm_diversity']:.3f}")
-    print(f"Convergence: {prediction['collective_metrics']['convergence_strength']:.3f}")
-    print(f"Innovation: {prediction['innovation_level']}")
-    
-    # Sauvegarde
-    predictor.save_swarm_results(prediction)
-    
-    print("\n🌟 INTELLIGENCE COLLECTIVE TERMINÉE AVEC SUCCÈS! 🌟")
+    prediction_result = predictor.generate_swarm_prediction()
+
+    # Affichage des résultats - Suppressed
+    # print("\n🎉 PRÉDICTION COLLECTIVE GÉNÉRÉE! 🎉")
+    # ... other prints ...
+
+    # Sauvegarde - This script saves its own files, which is fine for now.
+    # predictor.save_swarm_results(prediction_result)
+
+    # print("\n🌟 INTELLIGENCE COLLECTIVE TERMINÉE AVEC SUCCÈS! 🌟") # Suppressed
+
+    output_dict = {
+        "nom_predicteur": "swarm_intelligence_predictor",
+        "numeros": prediction_result.get('main_numbers'),
+        "etoiles": prediction_result.get('stars'),
+        "date_tirage_cible": target_date_str,
+        "confidence": prediction_result.get('confidence_score', 6.5), # Default confidence
+        "categorie": "Revolutionnaire"
+    }
+    print(json.dumps(output_dict))
 
 if __name__ == "__main__":
     main()
