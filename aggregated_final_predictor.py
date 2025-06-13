@@ -122,6 +122,7 @@ class AggregatedFinalPredictor:
                         result = json.load(f)
                     self.test_results.append(result)
                 except Exception as e:
+                    pass
                     # print(f"⚠️ Erreur lecture {file_path}: {e}", file=sys.stderr) # To stderr
         
         # print(f"✅ {len(self.test_results)} résultats de tests chargés") # Suppressed
