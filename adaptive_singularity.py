@@ -632,12 +632,16 @@ def main():
     
     # print("\n🌟 SINGULARITÉ ADAPTÉE TERMINÉE AVEC SUCCÈS! 🌟") # Suppressed
 
+    raw_numeros = prediction_result.get('main_numbers', [])
+    raw_etoiles = prediction_result.get('stars', [])
+    raw_confidence = prediction_result.get('confidence_score', 7.5) # Default ensures it's a float
+
     output_dict = {
         "nom_predicteur": "adaptive_singularity",
-        "numeros": prediction_result.get('main_numbers'),
-        "etoiles": prediction_result.get('stars'),
+        "numeros": [int(n) for n in raw_numeros] if raw_numeros else [],
+        "etoiles": [int(s) for s in raw_etoiles] if raw_etoiles else [],
         "date_tirage_cible": target_date_str,
-        "confidence": prediction_result.get('confidence_score', 7.5), # Default from its typical range
+        "confidence": float(raw_confidence), # raw_confidence will be a number due to default
         "categorie": "Revolutionnaire"
     }
     print(json.dumps(output_dict))
