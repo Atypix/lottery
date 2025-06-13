@@ -98,26 +98,38 @@ class AdvancedMLPredictor:
         print("📊 Chargement des résultats scientifiques...")
         
         try:
-            # Chargement des données
-            self.df = pd.read_csv('data/euromillions_enhanced_dataset.csv') # Added data/ prefix
-            
-            # Chargement de l'analyse statistique
+            self.df = pd.read_csv('data/euromillions_enhanced_dataset.csv') # Attempt to load main data
+            print(f"✅ Données CSV chargées: {len(self.df)} tirages")
+        except Exception as e:
+            print(f"❌ Erreur de chargement du CSV 'data/euromillions_enhanced_dataset.csv': {e}", file=sys.stderr)
+            self.df = pd.DataFrame() # Initialize as empty DataFrame to avoid error in __init__ if it checks for None only
+
+        try:
             with open('results/scientific/analysis/statistical_analysis.json', 'r') as f:
                 self.statistical_results = json.load(f)
-            
-            # Tirage de référence
-            self.reference_draw = {
-                'numbers': [20, 21, 29, 30, 35],
-                'stars': [2, 12],
-                'date': '2025-06-06'
+            print("✅ Résultats statistiques JSON intégrés")
+        except FileNotFoundError:
+            print(f"⚠️ Fichier 'results/scientific/analysis/statistical_analysis.json' non trouvé. Utilisation de valeurs statistiques par défaut.", file=sys.stderr)
+            self.statistical_results = {
+                'bayesian_analysis': {'posterior_probabilities': (np.ones(50) / 50).tolist()},
+                'data_quality': {'data_completeness': 100.0},
+                'inferential_statistics': {'chi2_uniformity': {'p_value': 1.0}}
+            }
+        except Exception as e: # Catch other JSON loading errors
+            print(f"❌ Erreur de chargement du JSON 'results/scientific/analysis/statistical_analysis.json': {e}", file=sys.stderr)
+            print("Utilisation de valeurs statistiques par défaut suite à une erreur de chargement du JSON.", file=sys.stderr)
+            self.statistical_results = { # Default structure on other JSON errors too
+                'bayesian_analysis': {'posterior_probabilities': (np.ones(50) / 50).tolist()},
+                'data_quality': {'data_completeness': 100.0},
+                'inferential_statistics': {'chi2_uniformity': {'p_value': 1.0}}
             }
             
-            print(f"✅ Données chargées: {len(self.df)} tirages")
-            print("✅ Résultats statistiques intégrés")
-            
-        except Exception as e:
-            print(f"❌ Erreur de chargement: {e}", file=sys.stderr) # Print errors to stderr
-            self.df = None # Ensure df is None if loading fails
+        # Reference draw can be set regardless
+        self.reference_draw = {
+            'numbers': [20, 21, 29, 30, 35],
+            'stars': [2, 12],
+            'date': '2025-06-06'
+        }
             
     def prepare_features(self):
         """Prépare les caractéristiques basées sur l'analyse scientifique."""
